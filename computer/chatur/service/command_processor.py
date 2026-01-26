@@ -1,0 +1,74 @@
+"""Command processor - integrates all handlers"""
+
+from chatur.core.llm import LLMClient
+from chatur.core.tts import TextToSpeech
+from chatur.handlers.reminder import ReminderHandler
+from chatur.handlers.timer import TimerHandler
+from chatur.handlers.notes import NotesHandler
+from chatur.handlers.qa import QAHandler
+from chatur.handlers.app_launcher import AppLauncherHandler
+from chatur.handlers.media_control import MediaControlHandler
+from chatur.handlers.file_search import FileSearchHandler
+from chatur.models.intent import IntentType
+from chatur.utils.logger import setup_logger
+
+logger = setup_logger('chatur.command_processor')
+
+class CommandProcessor:
+    """Process voice commands and execute actions"""
+    
+    def __init__(self, llm_client: LLMClient, tts_engine: TextToSpeech):
+        self.llm = llm_client
+        self.tts = tts_engine
+        
+        # Initialize handlers
+        self.handlers = {
+            IntentType.REMINDER: ReminderHandler(),
+            IntentType.TIMER: TimerHandler(tts_engine=tts_engine),
+            IntentType.NOTE: NotesHandler(),
+            IntentType.QUESTION: QAHandler(llm_client),
+            IntentType.APP_LAUNCH: AppLauncherHandler(),
+            IntentType.MEDIA_CONTROL: MediaControlHandler(),
+            IntentType.FILE_SEARCH: FileSearchHandler(),
+        }
+        
+        logger.info("Command processor initialized with all handlers")
+    
+    def process_command(self, command_text: str) -> str:
+        """Process a voice command and return response"""
+        try:
+            logger.info(f"Processing command: {command_text}")
+            
+            # Classify intent
+            intent = self.llm.classify_intent(command_text)
+            logger.info(f"Classified as: {intent.type.value} (language: {intent.language})")
+            
+            # Find appropriate handler
+            handler = self.handlers.get(intent.type)
+            
+            if handler and handler.can_handle(intent):
+                # Execute handler
+                response = handler.handle(intent)
+                logger.info(f"Handler response: {response}")
+                
+                # Speak response
+                self.tts.speak(response, intent.response_language)
+                
+                return response
+            else:
+                # Unknown intent
+                logger.warning(f"No handler for intent: {intent.type.value}")
+                
+                if intent.response_language == 'hi':
+                    response = "मुझे समझ नहीं आया। कृपया दोबारा कहें।"
+                else:
+                    response = "I didn't understand that. Could you please repeat?"
+                
+                self.tts.speak(response, intent.response_language)
+                return response
+                
+        except Exception as e:
+            logger.error(f"Error processing command: {e}", exc_info=True)
+            response = "Sorry, I had trouble processing that command"
+            self.tts.speak(response, 'en')
+            return response

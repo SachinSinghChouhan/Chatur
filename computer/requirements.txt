@@ -1,0 +1,39 @@
+# Wake Word Detection
+pvporcupine==2.2.0
+
+# Speech Recognition
+azure-cognitiveservices-speech==1.34.0
+pyaudio==0.2.14  # For microphone recording (Whisper/Google/Vosk STT)
+SpeechRecognition==3.10.0  # For Google STT
+vosk==0.3.45  # For offline STT
+
+# Text-to-Speech
+pyttsx3==2.90
+
+# LLM
+openai>=1.12.0
+
+# Database (sqlite3 is built-in)
+
+# Scheduling
+APScheduler==3.10.4
+
+# System Tray
+pystray==0.19.5
+Pillow==10.1.0
+
+# Notifications
+win10toast==0.9
+
+# Media Control
+pyautogui==0.9.54
+
+# Configuration
+PyYAML==6.0.1
+python-dotenv==1.0.0
+
+# Utilities
+python-dateutil==2.8.2
+
+# Retry logic
+tenacity==8.2.3

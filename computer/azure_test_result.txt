@@ -1,0 +1,38 @@
+============================================================
+AZURE SPEECH-TO-TEXT DIAGNOSTIC
+============================================================
+[OK] AZURE_SPEECH_KEY: DSKcmp4m... (hidden)
+[OK] AZURE_SPEECH_REGION: centralindia
+
+============================================================
+Creating Speech Recognizer...
+============================================================
+[OK] Speech config created
+[OK] Speech recognizer created
+
+============================================================
+MICROPHONE TEST
+============================================================
+Please say something in the next 10 seconds...
+(Speak clearly into your microphone)
+
+
+============================================================
+RESULT
+============================================================
+[WARNING] No speech detected
+
+Possible causes:
+  1. Microphone volume is too low
+  2. You didn't speak during the listening period
+  3. Background noise is too high
+
+Troubleshooting:
+  - Check Windows Settings > Privacy > Microphone
+  - Ensure 'Let apps access your microphone' is ON
+  - Ensure 'Let desktop apps access your microphone' is ON
+  - Increase microphone volume in Windows sound settings
+
+============================================================
+RESULT: Azure STT test failed - see errors above
+============================================================

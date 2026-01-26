@@ -1,0 +1,165 @@
+# Computer Voice Assistant Configuration
+
+# Speech-to-Text Engine Selection
+stt:
+  engine: "google"  # Options: azure, whisper, google, vosk
+  # Azure settings
+  azure_region: "centralindia"
+  azure_timeout_ms: 8000
+  # Vosk settings
+  vosk_model_path: "vosk-model"  # Path to Vosk model directory
+
+# Default Browser
+browser:
+  default: "brave"  # Options: brave, chrome, firefox, edge
+  fallback_order:
+    - brave
+    - chrome
+    - firefox
+    - edge
+
+# Wake Word Detection
+wake_word:
+  enabled: false  # Set to true when wake word is implemented
+  sensitivity: 0.5
+  keyword: "computer"
+  keyword_path: "resources/wake_words/computer_windows.ppn"
+
+# Azure Speech Services
+azure:
+  region: "centralindia"
+  languages:
+    - "en-IN"
+    - "hi-IN"
+  stt_timeout_ms: 8000  # Initial silence timeout
+  stt_end_silence_ms: 2000  # End silence timeout
+
+# OpenAI Configuration
+openai:
+  model: "gpt-3.5-turbo"
+  max_tokens: 150
+  temperature: 0.7
+
+# Text-to-Speech
+tts:
+  rate: 150  # Words per minute
+  volume: 0.9  # 0.0 to 1.0
+  use_transliteration: true  # Fallback for Hindi when voice not available
+
+# Reminder & Timer Scheduler
+scheduler:
+  check_interval_seconds: 30  # How often to check for due reminders
+  reminder_window_seconds: 30  # ±30 seconds window for triggering
+  max_conversation_history: 100
+
+# File Search
+file_search:
+  search_locations:
+    - "Desktop"
+    - "Documents"
+    - "Downloads"
+    - "C:\\"
+    - "D:\\"
+    - "~"  # Home directory
+  max_results: 10
+  timeout_seconds: 30
+  supported_extensions:
+    - pdf
+    - docx
+    - doc
+    - xlsx
+    - xls
+    - pptx
+    - ppt
+    - txt
+    - jpg
+    - jpeg
+    - png
+    - gif
+    - mp4
+    - mp3
+    - zip
+    - rar
+    - exe
+
+# URL Detection
+url_detection:
+  supported_tlds:
+    - com
+    - org
+    - net
+    - in
+    - io
+    - co
+    - edu
+    - gov
+    - site
+    - xyz
+    - app
+  auto_add_https: true
+
+# Media Control
+media_control:
+  volume_step: 2  # Percentage to increase/decrease volume
+  use_exact_volume: true  # Use COM interface for exact volume control
+
+# App Launch
+app_launch:
+  recognized_apps:
+    - brave
+    - chrome
+    - firefox
+    - edge
+    - calculator
+    - notepad
+    - gmail
+    - explorer
+    - whatsapp
+    - spotify
+  browser_close_apps:  # Apps to close when closing browser
+    - chrome.exe
+    - firefox.exe
+    - msedge.exe
+    - brave.exe
+
+# Language Detection
+language:
+  default: "en"
+  hindi_char_threshold: 0.3  # 30% Hindi characters to detect Hindi
+  supported_languages:
+    - en
+    - hi
+
+# System Tray
+system_tray:
+  auto_start_service: true
+  show_notifications: true
+  icon_update_interval_seconds: 2
+  menu_update_delay_ms: 500
+
+# Service Manager
+service:
+  restart_on_error: true
+  shutdown_timeout_seconds: 5
+  restart_delay_seconds: 0.5
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  max_file_size_mb: 10
+  backup_count: 5
+  log_directory: "logs"
+  console_output: true
+  file_output: true
+
+# Database
+database:
+  path: "~/.computer/computer.db"  # Will be expanded to AppData/Roaming
+  backup_enabled: true
+  backup_interval_hours: 24
+
+# Performance
+performance:
+  llm_cache_enabled: false
+  max_concurrent_handlers: 5
+  command_timeout_seconds: 30
