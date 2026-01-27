@@ -10,6 +10,12 @@ def test_intent_rules():
         ("read my email", IntentType.EMAIL),
         ("do i have any new emails", IntentType.EMAIL),
         ("search emails from boss", IntentType.EMAIL),
+        ("remind me to buy milk", IntentType.TASK),
+        ("add call mom to my list", IntentType.TASK),
+        ("what are my tasks", IntentType.TASK),
+        ("complete buy milk", IntentType.TASK),
+        ("remove call mom from list", IntentType.TASK),
+        ("remove what are my task from task list", IntentType.TASK), # Regression test
         ("what is the weather", IntentType.QUESTION), # Should fallback or be weather
         ("open google", IntentType.APP_LAUNCH)
     ]

@@ -14,6 +14,7 @@ from chatur.handlers.system_info import SystemInfoHandler
 from chatur.handlers.math import MathHandler
 from chatur.handlers.calendar import CalendarHandler
 from chatur.handlers.email import GmailHandler
+from chatur.handlers.tasks import GoogleTasksHandler
 from chatur.storage.conversation_repository import ConversationRepository
 from chatur.models.intent import IntentType
 from chatur.utils.logger import setup_logger
@@ -42,6 +43,7 @@ class CommandProcessor:
             IntentType.MATH: MathHandler(),
             IntentType.CALENDAR: CalendarHandler(),
             IntentType.EMAIL: GmailHandler(),
+            IntentType.TASK: GoogleTasksHandler(),
         }
         
         logger.info("Command processor initialized with all handlers")

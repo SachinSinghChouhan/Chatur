@@ -57,6 +57,18 @@ Output: {"intent":"email","language":"en","parameters":{"action":"read", "count"
 Input: "Any emails from Sarah?"
 Output: {"intent":"email","language":"en","parameters":{"action":"search", "query":"from:Sarah"},"response_language":"en"}
 
+Input: "Add buy milk to my tasks"
+Output: {"intent":"task","language":"en","parameters":{"action":"add", "title":"Buy milk"},"response_language":"en"}
+
+Input: "What are my tasks?"
+Output: {"intent":"task","language":"en","parameters":{"action":"list"},"response_language":"en"}
+
+Input: "Complete the buy milk task"
+Output: {"intent":"task","language":"en","parameters":{"action":"complete", "title":"Buy milk"},"response_language":"en"}
+
+Input: "Remove call mom from my list"
+Output: {"intent":"task","language":"en","parameters":{"action":"complete", "title":"Call mom"},"response_language":"en"}
+
 Input: "Schedule a meeting with John tomorrow at 2 PM"
 Output: {"intent":"calendar","language":"en","parameters":{"action":"create","summary":"Meeting with John","time":"tomorrow 2:00 PM"},"response_language":"en"}
 
@@ -297,6 +309,36 @@ class LLMClient:
                 type=IntentType.EMAIL,
                 language=language,
                 parameters=params,
+                response_language=response_language
+            )
+
+        # Task/Todo intent
+        elif any(word in text_lower for word in ['task', 'todo', 'to-do', 'list']) or ('remind' in text_lower and not any(t in text_lower for t in ['at ', 'in ', 'tomorrow', 'next', 'baje'])):
+            action = 'add'
+            title = text
+            
+            # Check for completion/deletion intent FIRST (Prioritized)
+            if any(word in text_lower for word in ['remove', 'delete', 'complete', 'finish', 'done', 'tick off']):
+                action = 'complete'
+                # Extract task title to remove
+                title = text_lower
+                for prefix in ['remove', 'delete', 'complete', 'finish', 'done', 'tick off', 'task', 'from my', 'list']:
+                    title = title.replace(prefix, '')
+                title = title.strip()
+            # Check for list/read intent
+            elif any(word in text_lower for word in ['what', 'show', 'read', 'check', 'list', 'pending']) and not any(word in text_lower for word in ['add', 'create', 'new', 'remind']):
+                action = 'list'
+            else:
+                # Cleaning up "add to list" or "remind me to"
+                title = text_lower.replace('add', '').replace('to my', '').replace('to the', '').replace('task list', '').replace('todo list', '').replace('list', '').replace('remind me to', '').strip()
+                # Capitalize first letter
+                if title:
+                    title = title[0].upper() + title[1:]
+            
+            return Intent(
+                type=IntentType.TASK,
+                language=language,
+                parameters={'action': action, 'title': title},
                 response_language=response_language
             )
 

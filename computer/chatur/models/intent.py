@@ -18,6 +18,7 @@ class IntentType(Enum):
     MATH = "math"
     CALENDAR = "calendar"
     EMAIL = "email"
+    TASK = "task"
     UNKNOWN = "unknown"
 
 @dataclass
