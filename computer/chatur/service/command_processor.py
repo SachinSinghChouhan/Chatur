@@ -9,6 +9,12 @@ from chatur.handlers.qa import QAHandler
 from chatur.handlers.app_launcher import AppLauncherHandler
 from chatur.handlers.media_control import MediaControlHandler
 from chatur.handlers.file_search import FileSearchHandler
+from chatur.handlers.weather import WeatherHandler
+from chatur.handlers.system_info import SystemInfoHandler
+from chatur.handlers.math import MathHandler
+from chatur.handlers.calendar import CalendarHandler
+from chatur.handlers.email import GmailHandler
+from chatur.storage.conversation_repository import ConversationRepository
 from chatur.models.intent import IntentType
 from chatur.utils.logger import setup_logger
 
@@ -20,16 +26,22 @@ class CommandProcessor:
     def __init__(self, llm_client: LLMClient, tts_engine: TextToSpeech):
         self.llm = llm_client
         self.tts = tts_engine
+        self.conversation_repo = ConversationRepository()
         
         # Initialize handlers
         self.handlers = {
             IntentType.REMINDER: ReminderHandler(),
             IntentType.TIMER: TimerHandler(tts_engine=tts_engine),
             IntentType.NOTE: NotesHandler(),
-            IntentType.QUESTION: QAHandler(llm_client),
+            IntentType.QUESTION: QAHandler(llm_client, self.conversation_repo),
             IntentType.APP_LAUNCH: AppLauncherHandler(),
             IntentType.MEDIA_CONTROL: MediaControlHandler(),
             IntentType.FILE_SEARCH: FileSearchHandler(),
+            IntentType.WEATHER: WeatherHandler(),
+            IntentType.SYSTEM_INFO: SystemInfoHandler(),
+            IntentType.MATH: MathHandler(),
+            IntentType.CALENDAR: CalendarHandler(),
+            IntentType.EMAIL: GmailHandler(),
         }
         
         logger.info("Command processor initialized with all handlers")
@@ -50,6 +62,13 @@ class CommandProcessor:
                 # Execute handler
                 response = handler.handle(intent)
                 logger.info(f"Handler response: {response}")
+                
+                # Store in conversation history
+                self.conversation_repo.add_exchange(
+                    user_input=command_text,
+                    assistant_response=response,
+                    intent_type=intent.type.value
+                )
                 
                 # Speak response
                 self.tts.speak(response, intent.response_language)

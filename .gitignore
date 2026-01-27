@@ -1,0 +1,4 @@
+.ai/
+.protocol/
+.venv/
+.credentials.json/

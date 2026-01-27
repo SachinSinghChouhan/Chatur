@@ -17,24 +17,27 @@ Supported intents:
 - timer: Set countdown timers
 - note: Store/retrieve facts
 - question: Answer general questions
-- app_launch: Open applications
+- app_launch: Open applications or URLs
 - media_control: Control music playback
+- file_search: Find and open files
+- weather: Get weather information
+- sys_info: Get system information (battery, CPU, memory, disk, network)
+- math: Calculate expressions or convert units
+- calendar: View or manage calendar events
+- email: Read or search emails
 - unknown: Cannot understand
 
 Response format:
 {
-  "intent": "reminder|timer|note|question|app_launch|media_control|unknown",
-  "language": "en|hi|hinglish",
+  "intent": "reminder|timer|note|question|app_launch|media_control|file_search|weather|system_info|math|calendar|email|unknown",
+  "language": "en",
   "parameters": {},
-  "response_language": "en|hi"
+  "response_language": "en"
 }
 
 Examples:
 Input: "Remind me to call mom at 5 PM"
 Output: {"intent":"reminder","language":"en","parameters":{"text":"call mom","time":"17:00"},"response_language":"en"}
-
-Input: "Kal subah 8 baje meeting ka reminder"
-Output: {"intent":"reminder","language":"hi","parameters":{"text":"meeting","time":"tomorrow 08:00"},"response_language":"hi"}
 
 Input: "Set timer for 5 minutes"
 Output: {"intent":"timer","language":"en","parameters":{"duration_seconds":300},"response_language":"en"}
@@ -42,9 +45,38 @@ Output: {"intent":"timer","language":"en","parameters":{"duration_seconds":300},
 Input: "Open Chrome"
 Output: {"intent":"app_launch","language":"en","parameters":{"app_name":"chrome"},"response_language":"en"}
 
+Input: "What's on my calendar?"
+Output: {"intent":"calendar","language":"en","parameters":{"action":"list"},"response_language":"en"}
+
+Input: "Read my latest emails"
+Output: {"intent":"email","language":"en","parameters":{"action":"read", "count": 5},"response_language":"en"}
+
+Input: "Check my mails"
+Output: {"intent":"email","language":"en","parameters":{"action":"read", "count": 5},"response_language":"en"}
+
+Input: "Any emails from Sarah?"
+Output: {"intent":"email","language":"en","parameters":{"action":"search", "query":"from:Sarah"},"response_language":"en"}
+
+Input: "Schedule a meeting with John tomorrow at 2 PM"
+Output: {"intent":"calendar","language":"en","parameters":{"action":"create","summary":"Meeting with John","time":"tomorrow 2:00 PM"},"response_language":"en"}
+
+Input: "What is 25 times 4?"
+Output: {"intent":"math","language":"en","parameters":{"operation":"calculate","query":"25 * 4"},"response_language":"en"}
+
+Input: "Convert 100 miles to kilometers"
+Output: {"intent":"math","language":"en","parameters":{"operation":"convert","value":100,"source_unit":"miles","target_unit":"kilometers"},"response_language":"en"}
+
+Input: "What's the weather?"
+Output: {"intent":"weather","language":"en","parameters":{"query_type":"current"},"response_language":"en"}
+
+Input: "What's my battery level?"
+Output: {"intent":"system_info","language":"en","parameters":{"query_type":"battery"},"response_language":"en"}
+
 Input: "Play music"
 Output: {"intent":"media_control","language":"en","parameters":{"action":"play"},"response_language":"en"}
 
+Analyze this command and return ONLY the JSON:
+ 
 Now analyze: {user_command}"""
 
 class LLMClient:
@@ -235,6 +267,39 @@ class LLMClient:
                 response_language=response_language
             )
         
+        # Email intent
+        elif any(word in text_lower for word in ['email', 'mail', 'inbox', 'gmail', 'unread']):
+            action = 'read'
+            if 'search' in text_lower or 'find' in text_lower or 'from' in text_lower:
+                action = 'search'
+            
+            params = {'action': action}
+            
+            if action == 'read':
+                # Default count
+                params['count'] = 5
+            elif action == 'search':
+                # Extract query
+                # If "from Sarah" -> query="from:Sarah"
+                if 'from' in text_lower:
+                    try:
+                        sender = text_lower.split('from')[-1].strip()
+                        params['query'] = f"from:{sender}"
+                    except:
+                        params['query'] = text
+                else:
+                    # Generic search, use the whole text as query if no specific pattern
+                    # Clean up common prefixes
+                    query = text_lower.replace('search', '').replace('find', '').replace('emails', '').replace('email', '').strip()
+                    params['query'] = query
+            
+            return Intent(
+                type=IntentType.EMAIL,
+                language=language,
+                parameters=params,
+                response_language=response_language
+            )
+
         # Question intent (everything else)
         else:
             return Intent(
@@ -245,31 +310,52 @@ class LLMClient:
             )
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-    def answer_question(self, question: str, language: str = 'en') -> str:
-        """Answer a question using OpenAI"""
+    def answer_question(self, question: str, language: str = 'en', conversation_history: list = None) -> str:
+        """
+        Answer a question using OpenAI with conversation context
+        
+        Args:
+            question: The users question
+            language: Response language
+            conversation_history: List of recent exchanges (optional)
+        
+        Returns:
+            Answer string
+        """
         if not self.client:
             return "I need an OpenAI API key to answer questions. Please add OPENAI_API_KEY to your .env file."
         
         try:
-            system_prompt = f"""You are Computer, a helpful voice assistant. Answer the user's question concisely in {language}.
-
-Keep responses:
-- Short (2-3 sentences max)
-- Conversational
-- In the same language as the question"""
+            system_prompt = (
+                f"You are Computer, a helpful voice assistant. Answer the user's question concisely in {language}.\n\n"
+                "Keep responses:\n"
+                "- Short (2-3 sentences max)\n"
+                "- Conversational\n"
+                "- In the same language as the question\n"
+                "- Use conversation history for context when relevant"
+            )
+            
+            # Build messages with conversation history
+            messages = [{"role": "system", "content": system_prompt}]
+            
+            # Add conversation history if provided
+            if conversation_history:
+                for exchange in conversation_history[-5:]:  # Last 5 exchanges
+                    messages.append({"role": "user", "content": exchange.get('user_input', '')})
+                    messages.append({"role": "assistant", "content": exchange.get('assistant_response', '')})
+            
+            # Add current question
+            messages.append({"role": "user", "content": question})
             
             response = self.client.chat.completions.create(
                 model=config.openai_model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": question}
-                ],
+                messages=messages,
                 temperature=0.7,
                 max_tokens=config.openai_max_tokens
             )
             
             answer = response.choices[0].message.content
-            logger.info(f"Generated answer for question: {question[:50]}...")
+            logger.info(f"Generated context-aware answer for: {question[:50]}...")
             return answer
             
         except Exception as e:

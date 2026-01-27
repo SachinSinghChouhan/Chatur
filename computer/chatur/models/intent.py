@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Dict, Any
 
 class IntentType(Enum):
-    """Supported intent types"""
+    """Types of intents the assistant can handle"""
     REMINDER = "reminder"
     TIMER = "timer"
     NOTE = "note"
@@ -13,6 +13,11 @@ class IntentType(Enum):
     APP_LAUNCH = "app_launch"
     MEDIA_CONTROL = "media_control"
     FILE_SEARCH = "file_search"
+    WEATHER = "weather"
+    SYSTEM_INFO = "system_info"
+    MATH = "math"
+    CALENDAR = "calendar"
+    EMAIL = "email"
     UNKNOWN = "unknown"
 
 @dataclass

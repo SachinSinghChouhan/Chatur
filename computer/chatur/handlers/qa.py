@@ -9,8 +9,9 @@ logger = setup_logger('chatur.handlers.qa')
 class QAHandler(BaseHandler):
     """Handler for question answering"""
     
-    def __init__(self, llm_client):
+    def __init__(self, llm_client, conversation_repo=None):
         self.llm = llm_client
+        self.conversation_repo = conversation_repo
     
     def can_handle(self, intent: Intent) -> bool:
         """Check if this is a question intent"""
@@ -28,7 +29,14 @@ class QAHandler(BaseHandler):
                     return "What would you like to know?"
             
             logger.info(f"Answering question: {question}")
-            answer = self.llm.answer_question(question, intent.response_language)
+            
+            # Fetch conversation history if repo is available
+            history = None
+            if self.conversation_repo:
+                # Get last 5 exchanges
+                history = self.conversation_repo.get_recent_exchanges(limit=5)
+            
+            answer = self.llm.answer_question(question, intent.response_language, conversation_history=history)
             
             return answer
             

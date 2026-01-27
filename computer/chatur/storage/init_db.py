@@ -73,6 +73,7 @@ def init_database():
             assistant_response TEXT NOT NULL,
             intent_type VARCHAR(50),
             language VARCHAR(10),
+            session_id TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         CREATE INDEX IF NOT EXISTS idx_conversation_timestamp 
