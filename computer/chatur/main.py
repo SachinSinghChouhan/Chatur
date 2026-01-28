@@ -16,7 +16,9 @@ from chatur.core.llm import LLMClient
 from chatur.service.command_processor import CommandProcessor
 from chatur.service.scheduler import ReminderScheduler
 from chatur.service.service_manager import ManagedService
+from chatur.service.service_manager import ManagedService
 from chatur.ui.system_tray import create_tray
+from chatur.api.socket_server import run_api_server, broadcast_message_sync
 
 logger = setup_logger('chatur')
 
@@ -50,9 +52,13 @@ def initialize_components():
     logger.info("Initializing LLM client...")
     llm = LLMClient()
     
+    logger.info("Starting API server...")
+    api_thread = threading.Thread(target=run_api_server, daemon=True)
+    api_thread.start()
+
     # Initialize command processor
     logger.info("Initializing command processor...")
-    processor = CommandProcessor(llm, tts)
+    processor = CommandProcessor(llm, tts, broadcast_callback=broadcast_message_sync)
     
     # Initialize and start reminder scheduler
     logger.info("Initializing reminder scheduler...")
@@ -98,6 +104,7 @@ def run_assistant_loop(stop_event: threading.Event):
     while not stop_event.is_set():
         try:
             # Text input mode (for now, until voice is fully working)
+            broadcast_message_sync('listening')
             command = input("You: ").strip()
             
             if not command:

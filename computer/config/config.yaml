@@ -30,7 +30,6 @@ azure:
   region: "centralindia"
   languages:
     - "en-IN"
-    - "hi-IN"
   stt_timeout_ms: 8000  # Initial silence timeout
   stt_end_silence_ms: 2000  # End silence timeout
 
@@ -130,10 +129,8 @@ app_launch:
 # Language Detection
 language:
   default: "en"
-  hindi_char_threshold: 0.3  # 30% Hindi characters to detect Hindi
   supported_languages:
     - en
-    - hi
 
 # System Tray
 system_tray:

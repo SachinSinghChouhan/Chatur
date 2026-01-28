@@ -24,9 +24,10 @@ logger = setup_logger('chatur.command_processor')
 class CommandProcessor:
     """Process voice commands and execute actions"""
     
-    def __init__(self, llm_client: LLMClient, tts_engine: TextToSpeech):
+    def __init__(self, llm_client: LLMClient, tts_engine: TextToSpeech, broadcast_callback=None):
         self.llm = llm_client
         self.tts = tts_engine
+        self.broadcast = broadcast_callback
         self.conversation_repo = ConversationRepository()
         
         # Initialize handlers
@@ -54,6 +55,8 @@ class CommandProcessor:
             logger.info(f"Processing command: {command_text}")
             
             # Classify intent
+            if self.broadcast: self.broadcast('processing')
+            
             intent = self.llm.classify_intent(command_text)
             logger.info(f"Classified as: {intent.type.value} (language: {intent.language})")
             
@@ -73,8 +76,10 @@ class CommandProcessor:
                 )
                 
                 # Speak response
+                if self.broadcast: self.broadcast('speaking')
                 self.tts.speak(response, intent.response_language)
                 
+                if self.broadcast: self.broadcast('idle')
                 return response
             else:
                 # Unknown intent

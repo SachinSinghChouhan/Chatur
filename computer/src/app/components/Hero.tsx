@@ -1,12 +1,10 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { Mic, Github, Download } from 'lucide-react';
+import computerIcon from '@/assets/computer-icon.gif';
 
 export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 py-20 pt-32">
       <div className="max-w-4xl mx-auto text-center">
-        {/* Microphone Icon with Subtle Pulse */}
+        {/* Animated Icon */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -21,19 +19,23 @@ export function Hero() {
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-              className="w-24 h-24 rounded-full bg-[var(--surface-card)] border border-[var(--surface-border)] flex items-center justify-center"
+              className="w-48 h-48 rounded-full flex items-center justify-center overflow-hidden"
             >
-              <Mic className="w-10 h-10 text-[var(--accent-primary)]" />
+              <img
+                src={computerIcon}
+                alt="Computer Voice Assistant"
+                className="w-full h-full object-cover"
+              />
             </motion.div>
             {/* Subtle outer ring */}
             <motion.div
-              animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
+              animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.1, 0.3] }}
               transition={{
                 duration: 3,
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-              className="absolute inset-0 rounded-full border border-[var(--accent-primary)] opacity-20"
+              className="absolute inset-0 rounded-full border-2 border-[var(--accent-primary)] opacity-20"
             />
           </div>
         </motion.div>

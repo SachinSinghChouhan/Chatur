@@ -109,19 +109,11 @@ class LLMClient:
         text_lower = text.lower()
         
         # Detect language - check for Hindi characters OR Hindi keywords
-        has_hindi_chars = any(char in text for char in ['क', 'ख', 'ग', 'च', 'ज', 'त', 'द', 'न', 'प', 'म', 'य', 'र', 'ल', 'व', 'श', 'स', 'ह'])
-        has_hindi_keywords = any(word in text_lower for word in [
-            # Common Hindi words
-            'kholo', 'khol', 'chalu', 'chalao', 'bajao', 'roko', 'band', 
-            'agla', 'pichla', 'gana', 'baje', 'minute', 'ka', 'ko', 'pe', 'pr',
-            'karo', 'kro', 'kr', 'de', 'do', 'hai', 'hain', 'mera', 'meri',
-            # Hinglish patterns
-            'karde', 'krde', 'karde', 'lagao', 'laga', 'set', 'reminder',
-            'timer', 'yaad', 'rakh', 'batao', 'bata', 'kya', 'kaise', 'kab',
-            'awaz', 'awaaz', 'tez', 'dheere', 'kam', 'badha', 'zyada', 'thoda'
-        ])
+        # has_hindi_chars = any(char in text for char in ['क', 'ख', 'ग', 'च', 'ज', 'त', 'द', 'न', 'प', 'म', 'य', 'र', 'ल', 'व', 'श', 'स', 'ह'])
+        # has_hindi_keywords = ...
         
-        language = 'hi' if (has_hindi_chars or has_hindi_keywords) else 'en'
+        # Enforce English only as per user request
+        language = 'en'
         response_language = language
         
         # Reminder intent
@@ -168,6 +160,39 @@ class LLMClient:
                 type=IntentType.NOTE,
                 language=language,
                 parameters={'action': 'store', 'key': 'note', 'value': text},
+                response_language=response_language
+            )
+        
+        # Email intent (check before app launcher to avoid "open mail" being treated as app launch)
+        elif any(word in text_lower for word in ['email', 'mail', 'inbox', 'gmail', 'unread']):
+            action = 'read'
+            if 'search' in text_lower or 'find' in text_lower or 'from' in text_lower:
+                action = 'search'
+            
+            params = {'action': action}
+            
+            if action == 'read':
+                # Default count
+                params['count'] = 5
+            elif action == 'search':
+                # Extract query
+                # If "from Sarah" -> query="from:Sarah"
+                if 'from' in text_lower:
+                    try:
+                        sender = text_lower.split('from')[-1].strip()
+                        params['query'] = f"from:{sender}"
+                    except:
+                        params['query'] = text
+                else:
+                    # Generic search, use the whole text as query if no specific pattern
+                    # Clean up common prefixes
+                    query = text_lower.replace('search', '').replace('find', '').replace('emails', '').replace('email', '').strip()
+                    params['query'] = query
+            
+            return Intent(
+                type=IntentType.EMAIL,
+                language=language,
+                parameters=params,
                 response_language=response_language
             )
         
@@ -274,39 +299,6 @@ class LLMClient:
             
             return Intent(
                 type=IntentType.MEDIA_CONTROL,
-                language=language,
-                parameters=params,
-                response_language=response_language
-            )
-        
-        # Email intent
-        elif any(word in text_lower for word in ['email', 'mail', 'inbox', 'gmail', 'unread']):
-            action = 'read'
-            if 'search' in text_lower or 'find' in text_lower or 'from' in text_lower:
-                action = 'search'
-            
-            params = {'action': action}
-            
-            if action == 'read':
-                # Default count
-                params['count'] = 5
-            elif action == 'search':
-                # Extract query
-                # If "from Sarah" -> query="from:Sarah"
-                if 'from' in text_lower:
-                    try:
-                        sender = text_lower.split('from')[-1].strip()
-                        params['query'] = f"from:{sender}"
-                    except:
-                        params['query'] = text
-                else:
-                    # Generic search, use the whole text as query if no specific pattern
-                    # Clean up common prefixes
-                    query = text_lower.replace('search', '').replace('find', '').replace('emails', '').replace('email', '').strip()
-                    params['query'] = query
-            
-            return Intent(
-                type=IntentType.EMAIL,
                 language=language,
                 parameters=params,
                 response_language=response_language

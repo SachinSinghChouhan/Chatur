@@ -122,9 +122,9 @@ class SpeechToText:
             return None
         
         try:
-            # Create auto-detect config for English and Hindi
+            # Create auto-detect config for English only (as per user request)
             auto_detect_config = speechsdk.languageconfig.AutoDetectSourceLanguageConfig(
-                languages=["en-IN", "hi-IN"]
+                languages=["en-IN"]
             )
             
             # Create recognizer with auto language detection
