@@ -5,7 +5,7 @@ import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
-import { Settings, Volume2, Activity, History, MessageSquare, User } from 'lucide-react';
+import { Settings, Volume2, Activity, MessageSquare, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SettingsModalProps {

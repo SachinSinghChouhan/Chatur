@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { motion, useInView } from 'motion/react';
+import { type MouseEvent, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 import {
   Layers,
   Shield,
@@ -48,7 +48,7 @@ const FeatureCard = ({ feature, index }: { feature: any; index: number }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     if (!divRef.current) return;
 
     const div = divRef.current;

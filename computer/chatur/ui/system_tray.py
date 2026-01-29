@@ -20,13 +20,13 @@ logger = setup_logger('chatur.system_tray')
 class SystemTray:
     """System tray interface for the voice assistant"""
     
-    def __init__(self, managed_service: ManagedService, 
+    def __init__(self, managed_service: Optional[ManagedService] = None, 
                  on_exit: Optional[Callable] = None):
         """
         Initialize system tray
         
         Args:
-            managed_service: The managed service to control
+            managed_service: The managed service to control (optional for on-demand mode)
             on_exit: Optional callback when user exits
         """
         self.managed_service = managed_service
@@ -61,7 +61,7 @@ class SystemTray:
     
     def _get_current_icon(self) -> Image.Image:
         """Get the appropriate icon based on service status"""
-        if not self.managed_service.service_manager.is_running():
+        if not self.managed_service or not self.managed_service.service_manager.is_running():
             return self.icons['inactive']
         
         error = self.managed_service.service_manager.get_error()
@@ -72,6 +72,32 @@ class SystemTray:
     
     def _create_menu(self) -> pystray.Menu:
         """Create the system tray menu"""
+        # Simple menu for on-demand mode (no managed service)
+        if not self.managed_service:
+            return pystray.Menu(
+                item(
+                    'Voice Assistant',
+                    self._show_status,
+                    default=True
+                ),
+                pystray.Menu.SEPARATOR,
+                item(
+                    'Press Ctrl+Space to activate',
+                    lambda icon, item: None,
+                    enabled=False
+                ),
+                pystray.Menu.SEPARATOR,
+                item(
+                    'About',
+                    self._show_about
+                ),
+                item(
+                    'Exit',
+                    self._exit
+                )
+            )
+        
+        # Full menu for managed service mode
         return pystray.Menu(
             item(
                 'Status',
@@ -111,15 +137,18 @@ class SystemTray:
     
     def _show_status(self, icon, item):
         """Show current status"""
-        is_running = self.managed_service.service_manager.is_running()
-        error = self.managed_service.service_manager.get_error()
-        
-        if error:
-            status = f"Error: {str(error)[:50]}"
-        elif is_running:
-            status = "Assistant is running"
+        if not self.managed_service:
+            status = "On-Demand Mode - Press Ctrl+Space to activate"
         else:
-            status = "Assistant is stopped"
+            is_running = self.managed_service.service_manager.is_running()
+            error = self.managed_service.service_manager.get_error()
+            
+            if error:
+                status = f"Error: {str(error)[:50]}"
+            elif is_running:
+                status = "Assistant is running"
+            else:
+                status = "Assistant is stopped"
         
         logger.info(f"Status check: {status}")
         
@@ -203,8 +232,9 @@ class SystemTray:
         """Exit the application"""
         logger.info("Exit requested from tray menu")
         
-        # Stop the service
-        self.managed_service.shutdown()
+        # Stop the service if it exists
+        if self.managed_service:
+            self.managed_service.shutdown()
         
         # Stop the tray icon
         if self.icon:
@@ -263,13 +293,13 @@ class SystemTray:
             self.icon.stop()
 
 
-def create_tray(managed_service: ManagedService, 
+def create_tray(managed_service: Optional[ManagedService] = None, 
                 on_exit: Optional[Callable] = None) -> SystemTray:
     """
     Helper function to create a system tray
     
     Args:
-        managed_service: The managed service to control
+        managed_service: The managed service to control (None for on-demand mode)
         on_exit: Optional callback when user exits
         
     Returns:

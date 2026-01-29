@@ -1,3 +1,5 @@
+import { motion } from 'motion/react';
+import { Download, Github } from 'lucide-react';
 import computerIcon from '@/assets/computer-icon.gif';
 
 export function Hero() {

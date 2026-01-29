@@ -28,11 +28,12 @@ def setup_logger(name: str) -> logging.Logger:
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
-    # 🖥️ Console handler (UTF-8) ← THIS FIXES YOUR ERROR
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.stream.reconfigure(encoding='utf-8')
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    # 🖥️ Console handler (UTF-8) - only if stdout is available
+    if sys.stdout is not None:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.stream.reconfigure(encoding='utf-8')
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
 
     logger.propagate = False
     return logger

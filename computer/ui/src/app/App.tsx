@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Hero } from '@/app/components/Hero';
 import { HowItWorks } from '@/app/components/HowItWorks';
@@ -22,7 +22,7 @@ export default function App() {
   const [wizardOpen, setWizardOpen] = useState(false);
 
   // Check onboarding status on load
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading) {
       const completed = localStorage.getItem('onboarding_complete');
       if (!completed) {

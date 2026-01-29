@@ -1,7 +1,7 @@
 """OpenAI LLM integration for intent classification and Q&A"""
 
 import os
-import json
+import re
 from openai import OpenAI
 from chatur.models.intent import Intent, IntentType
 from chatur.utils.logger import setup_logger
@@ -137,12 +137,10 @@ class LLMClient:
             # Extract duration
             duration = '5 minutes'
             if 'second' in text_lower:
-                import re
                 match = re.search(r'(\d+)\s*second', text_lower)
                 if match:
                     duration = f"{match.group(1)} seconds"
             elif 'minute' in text_lower or 'min' in text_lower:
-                import re
                 match = re.search(r'(\d+)\s*min', text_lower)
                 if match:
                     duration = f"{match.group(1)} minutes"
@@ -202,7 +200,6 @@ class LLMClient:
             action = 'close' if any(word in text_lower for word in ['close', 'quit', 'exit', 'kill', 'band', 'बंद']) else 'open'
             
             # Check for URLs or websites
-            import re
             # Build TLD pattern from config
             tlds = '|'.join(config.supported_tlds)
             url_pattern = rf'(?:https?://)?(?:www\.)?([a-zA-Z0-9-]+\.(?:{tlds})(?:/[^\s]*)?)'
@@ -275,7 +272,6 @@ class LLMClient:
             volume_level = None
             
             # Extract volume level if present
-            import re
             volume_match = re.search(r'(?:volume|awaz|awaaz)?\s*(?:to|ko|pe)?\s*(\d+)', text_lower)
             if volume_match:
                 volume_level = volume_match.group(1)
