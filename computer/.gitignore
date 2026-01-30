@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# Build artifacts
+dist/
+build/
+*.exe
+*.pkg
+
+# Virtual environments
+venv/
+.env/
