@@ -2,3 +2,12 @@
 .protocol/
 .venv/
 .credentials.json/
+
+# Build artifacts and distributions
+computer/build/
+computer/dist/
+computer/chatur/dist/
+
+# Python compiled files
+*.pyc
+__pycache__/
