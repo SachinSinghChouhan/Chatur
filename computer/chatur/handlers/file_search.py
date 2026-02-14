@@ -4,19 +4,20 @@ import os
 import subprocess
 import glob
 from pathlib import Path
+from typing import List, Optional
 from chatur.handlers.base import BaseHandler
 from chatur.models.intent import Intent, IntentType
 from chatur.utils.logger import setup_logger
 from chatur.utils.config import config
+from chatur.utils.responses import ResponseBuilder
 
 logger = setup_logger('chatur.handlers.file_search')
 
 class FileSearchHandler(BaseHandler):
     """Handler for searching and opening files/folders"""
     
-    def __init__(self):
-        # Get search locations from config
-        self.search_paths = []
+    def __init__(self) -> None:
+        self.search_paths: List[str] = []
         for location in config.file_search_locations:
             expanded = os.path.expanduser(location)
             self.search_paths.append(expanded)
@@ -32,53 +33,35 @@ class FileSearchHandler(BaseHandler):
             language = intent.response_language
             
             if not query:
-                if language == 'hi':
-                    return "क्या ढूंढना है?"
-                else:
-                    return "What would you like to search for?"
+                return ResponseBuilder.ask(language, "What would you like to search for?")
             
             logger.info(f"Searching for: {query}")
             
-            # Search for file/folder
             results = self._search_files(query)
             
             if not results:
-                if language == 'hi':
-                    return f"{query} नहीं मिला"
-                else:
-                    return f"Couldn't find {query}"
+                return ResponseBuilder.not_found(language, query)
             
-            # Open first result
             result_path = results[0]
             success = self._open_path(result_path)
             
             if success:
                 result_name = os.path.basename(result_path)
                 logger.info(f"Opened: {result_path}")
-                
-                if language == 'hi':
-                    return f"{result_name} खोल रहा हूं"
-                else:
-                    return f"Opening {result_name}"
+                return ResponseBuilder.success(language, "Opening", result_name)
             else:
-                if language == 'hi':
-                    return "फाइल खोलने में समस्या हुई"
-                else:
-                    return "Couldn't open the file"
+                return ResponseBuilder.error(language, "open the file")
                 
         except Exception as e:
             logger.error(f"File search error: {e}", exc_info=True)
-            if intent.response_language == 'hi':
-                return "फाइल ढूंढने में समस्या हुई"
-            else:
-                return "Sorry, I had trouble searching"
+            return ResponseBuilder.error(intent.response_language, "search for files")
     
-    def _search_files(self, query: str, max_results: int = None) -> list:
+    def _search_files(self, query: str, max_results: Optional[int] = None) -> List[str]:
         """Search for files/folders matching query"""
         if max_results is None:
             max_results = config.get_int('file_search.max_results', 5)
         
-        results = []
+        results: List[str] = []
         query_lower = query.lower()
         
         try:
@@ -121,15 +104,8 @@ class FileSearchHandler(BaseHandler):
     def _open_path(self, path: str) -> bool:
         """Open file or folder"""
         try:
-            if os.path.isdir(path):
-                # Open folder in Explorer
-                os.startfile(path)
-            else:
-                # Open file with default application
-                os.startfile(path)
-            
+            os.startfile(path)
             return True
-            
         except Exception as e:
             logger.error(f"Failed to open {path}: {e}")
             return False

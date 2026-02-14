@@ -2,6 +2,7 @@
 
 import os
 import re
+from typing import Optional, List, Dict, Any
 from openai import OpenAI
 from chatur.models.intent import Intent, IntentType
 from chatur.utils.logger import setup_logger
@@ -167,10 +168,9 @@ class LLMClient:
             if 'search' in text_lower or 'find' in text_lower or 'from' in text_lower:
                 action = 'search'
             
-            params = {'action': action}
+            params: Dict[str, Any] = {'action': action}
             
             if action == 'read':
-                # Default count
                 params['count'] = 5
             elif action == 'search':
                 # Extract query
@@ -340,7 +340,7 @@ class LLMClient:
             )
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-    def answer_question(self, question: str, language: str = 'en', conversation_history: list = None) -> str:
+    def answer_question(self, question: str, language: str = 'en', conversation_history: Optional[List[Dict[str, str]]] = None) -> str:
         """
         Answer a question using OpenAI with conversation context
         
@@ -365,16 +365,13 @@ class LLMClient:
                 "- Use conversation history for context when relevant"
             )
             
-            # Build messages with conversation history
-            messages = [{"role": "system", "content": system_prompt}]
+            messages: List[Dict[str, str]] = [{"role": "system", "content": system_prompt}]
             
-            # Add conversation history if provided
             if conversation_history:
-                for exchange in conversation_history[-5:]:  # Last 5 exchanges
+                for exchange in conversation_history[-5:]:
                     messages.append({"role": "user", "content": exchange.get('user_input', '')})
                     messages.append({"role": "assistant", "content": exchange.get('assistant_response', '')})
             
-            # Add current question
             messages.append({"role": "user", "content": question})
             
             response = self.client.chat.completions.create(
@@ -386,7 +383,7 @@ class LLMClient:
             
             answer = response.choices[0].message.content
             logger.info(f"Generated context-aware answer for: {question[:50]}...")
-            return answer
+            return answer if answer else "I'm having trouble answering that right now."
             
         except Exception as e:
             logger.error(f"Question answering error: {e}")

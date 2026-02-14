@@ -1,16 +1,16 @@
 """Improved Speech-to-Text with better error handling and audio configuration"""
 
 import os
+from typing import Optional, Tuple, Callable
 import azure.cognitiveservices.speech as speechsdk
 from chatur.utils.logger import setup_logger
-from typing import Optional
 
 logger = setup_logger('chatur.stt')
 
 class SpeechToText:
     """Azure Speech-to-Text wrapper with improved audio handling"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         speech_key = os.getenv('AZURE_SPEECH_KEY')
         speech_region = os.getenv('AZURE_SPEECH_REGION', 'centralindia')
         
@@ -20,32 +20,25 @@ class SpeechToText:
             self.speech_config = None
             return
         
-        # Configure speech with better settings
         self.speech_config = speechsdk.SpeechConfig(
             subscription=speech_key,
             region=speech_region
         )
         
-        # Set recognition language to English (India) by default
         self.speech_config.speech_recognition_language = "en-IN"
-        
-        # Enable detailed results
         self.speech_config.output_format = speechsdk.OutputFormat.Detailed
         
-        # Set properties for better recognition
         self.speech_config.set_property(
             speechsdk.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, 
-            "8000"  # 8 seconds of silence before timeout
+            "8000"
         )
         self.speech_config.set_property(
             speechsdk.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, 
-            "2000"  # 2 seconds of silence after speech
+            "2000"
         )
         
-        # Use default microphone
         audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
         
-        # Create recognizer
         self.recognizer = speechsdk.SpeechRecognizer(
             speech_config=self.speech_config,
             audio_config=audio_config
@@ -71,10 +64,8 @@ class SpeechToText:
             logger.info("Listening for speech...")
             print("🎤 Listening... (speak clearly into your microphone)")
             
-            # Recognize speech
             result = self.recognizer.recognize_once()
             
-            # Check result
             if result.reason == speechsdk.ResultReason.RecognizedSpeech:
                 logger.info(f"Recognized: {result.text}")
                 return result.text
@@ -109,6 +100,12 @@ class SpeechToText:
             logger.error(f"STT error: {e}", exc_info=True)
             print(f"❌ Error: {e}")
             return None
+        
+        return None
+    
+    def listen(self) -> Optional[str]:
+        """Alias for recognize_once for compatibility"""
+        return self.recognize_once()
     
     def recognize_with_language_detection(self) -> Optional[tuple[str, str]]:
         """

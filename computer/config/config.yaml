@@ -20,7 +20,7 @@ browser:
 
 # Wake Word Detection
 wake_word:
-  enabled: false  # Set to true when wake word is implemented
+  enabled: true  # Set to true to enable wake word detection
   sensitivity: 0.5
   keyword: "computer"
   keyword_path: "resources/wake_words/computer_windows.ppn"

@@ -4,6 +4,9 @@ pyaudio==0.2.14  # For microphone recording (Whisper/Google/Vosk STT)
 SpeechRecognition==3.10.0  # For Google STT
 vosk==0.3.45  # For offline STT
 
+# Wake Word Detection
+pvporcupine==2.1.0
+
 # Text-to-Speech
 pyttsx3==2.90
 

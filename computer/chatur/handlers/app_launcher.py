@@ -8,6 +8,7 @@ from chatur.handlers.base import BaseHandler
 from chatur.models.intent import Intent, IntentType
 from chatur.storage.app_repository import AppRepository
 from chatur.utils.logger import setup_logger
+from chatur.utils.responses import ResponseBuilder
 
 logger = setup_logger('chatur.handlers.app_launcher')
 
@@ -34,68 +35,44 @@ class AppLauncherHandler(BaseHandler):
                 try:
                     webbrowser.open(url)
                     logger.info(f"Opened URL in browser: {url}")
-                    if language == 'hi':
-                        return f"{url} खोल रहा हूं"
-                    else:
-                        return f"Opening {url}"
+                    return ResponseBuilder.get(language, {
+                        'en': f"Opening {url}",
+                        'hi': f"{url} खोल रहा हूं"
+                    })
                 except Exception as e:
                     logger.error(f"Failed to open URL: {e}")
-                    if language == 'hi':
-                        return "वेबसाइट खोलने में समस्या हुई"
-                    else:
-                        return "I had trouble opening that website"
+                    return ResponseBuilder.error(language, "open the website")
             
             if not app_name:
-                if language == 'hi':
-                    return "कौन सा ऐप?"
-                else:
-                    return "Which app?"
+                return ResponseBuilder.ask(language, "Which app?")
             
             # Find app in database
             app = self.repo.get_by_name(app_name)
             
             if not app:
                 logger.warning(f"App not found: {app_name}")
-                if language == 'hi':
-                    return f"{app_name} नहीं मिला"
-                else:
-                    return f"I couldn't find {app_name}"
+                return ResponseBuilder.not_found(language, app_name)
             
             # Close or open app
             if action == 'close':
                 success = self._close_app(app)
                 if success:
                     logger.info(f"Closed app: {app['display_name']}")
-                    if language == 'hi':
-                        return f"{app['display_name']} बंद कर दिया"
-                    else:
-                        return f"Closed {app['display_name']}"
+                    return ResponseBuilder.success(language, "Closed", app['display_name'])
                 else:
-                    if language == 'hi':
-                        return f"{app['display_name']} बंद करने में समस्या हुई"
-                    else:
-                        return f"Couldn't close {app['display_name']}"
+                    return ResponseBuilder.error(language, f"close {app['display_name']}")
             else:
                 # Open app
                 success = self._launch_app(app)
                 if success:
                     logger.info(f"Launched app: {app['display_name']}")
-                    if language == 'hi':
-                        return f"{app['display_name']} खोल रहा हूं"
-                    else:
-                        return f"Opening {app['display_name']}"
+                    return ResponseBuilder.success(language, "Opening", app['display_name'])
                 else:
-                    if language == 'hi':
-                        return f"{app['display_name']} खोलने में समस्या हुई"
-                    else:
-                        return f"I had trouble opening {app['display_name']}"
+                    return ResponseBuilder.error(language, f"open {app['display_name']}")
                 
         except Exception as e:
             logger.error(f"Error with app: {e}")
-            if intent.response_language == 'hi':
-                return "ऐप में समस्या हुई"
-            else:
-                return "Sorry, I had trouble with that app"
+            return ResponseBuilder.error(language, "with that app")
     
     def _launch_app(self, app: dict) -> bool:
         """Launch the application"""

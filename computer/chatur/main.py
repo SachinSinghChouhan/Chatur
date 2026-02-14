@@ -5,7 +5,6 @@ import threading
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 from chatur.utils.logger import setup_logger
@@ -13,6 +12,7 @@ from chatur.storage.init_db import init_database
 from chatur.core.tts import TextToSpeech
 from chatur.core.stt import SpeechToText
 from chatur.core.llm import LLMClient
+from chatur.core.wake_word import WakeWordDetector, create_wake_word_detector
 from chatur.service.command_processor import CommandProcessor
 from chatur.service.scheduler import ReminderScheduler
 from chatur.ui.system_tray import create_tray
@@ -20,10 +20,10 @@ from chatur.ui.webview_overlay import WebViewOverlay
 from chatur.api.socket_server import run_api_server, broadcast_message_sync
 from chatur.core.assistant_state import AssistantStateMachine, AssistantState
 from chatur.core.activation import ActivationListener
+from chatur.utils.config import config
 
 logger = setup_logger('chatur')
 
-# Global components (shared between modes)
 tts = None
 stt = None
 llm = None
@@ -31,22 +31,21 @@ processor = None
 scheduler = None
 state_machine = None
 activation_listener = None
+wake_word_detector = None
 native_overlay = None
 
 
 def initialize_components():
     """Initialize all core components"""
-    global tts, stt, llm, processor, scheduler, state_machine, native_overlay
+    global tts, stt, llm, processor, scheduler, state_machine, native_overlay, wake_word_detector
     
     logger.info("=" * 60)
     logger.info("Computer Voice Assistant - Initializing")
     logger.info("=" * 60)
     
-    # Initialize database
     logger.info("Initializing database...")
     init_database()
     
-    # Initialize core components
     logger.info("Initializing TTS engine...")
     tts = TextToSpeech()
     
@@ -60,25 +59,18 @@ def initialize_components():
     api_thread = threading.Thread(target=run_api_server, daemon=True)
     api_thread.start()
 
-    # Initialize webview overlay
     logger.info("Initializing webview overlay...")
-    # Determine static files location
     if getattr(sys, 'frozen', False):
-        # PyInstaller bundle
         static_dir = Path(sys._MEIPASS) / "ui" / "dist"
     else:
-        # Development
         static_dir = Path(__file__).parent.parent / "ui" / "dist"
     
     native_overlay = WebViewOverlay(static_dir=static_dir)
-    native_overlay.create_window()  # Create window (non-blocking)
+    native_overlay.create_window()
 
-    # Initialize state machine with overlay update callback
     logger.info("Initializing state machine...")
     def on_state_change(event_type, data):
-        # Broadcast to WebSocket
         broadcast_message_sync(event_type, data)
-        # Update webview overlay
         if event_type == 'state_change' and data.get('state'):
             state_str = data['state']
             state = AssistantState(state_str)
@@ -86,14 +78,27 @@ def initialize_components():
     
     state_machine = AssistantStateMachine(broadcast_callback=on_state_change)
 
-    # Initialize command processor
     logger.info("Initializing command processor...")
     processor = CommandProcessor(llm, tts, broadcast_callback=broadcast_message_sync)
     
-    # Initialize and start reminder scheduler
     logger.info("Initializing reminder scheduler...")
     scheduler = ReminderScheduler(tts_engine=tts)
     scheduler.start()
+    
+    wake_word_enabled = config.get_bool('wake_word.enabled', False)
+    if wake_word_enabled:
+        logger.info("Initializing wake word detector...")
+        wake_word_detector = create_wake_word_detector(
+            on_wake_word=handle_user_activation
+        )
+        if wake_word_detector:
+            wake_word_detector.start()
+            logger.info("Wake word detection started")
+        else:
+            logger.warning("Wake word detector failed to initialize")
+    else:
+        logger.info("Wake word detection is disabled")
+        wake_word_detector = None
     
     logger.info("=" * 60)
     logger.info("Initialization complete!")
@@ -102,19 +107,19 @@ def initialize_components():
 
 def shutdown_components():
     """Shutdown all components gracefully"""
-    global scheduler, activation_listener, native_overlay
+    global scheduler, activation_listener, native_overlay, wake_word_detector
     
     logger.info("Shutting down components...")
     
-    # Stop activation listener
+    if wake_word_detector:
+        wake_word_detector.stop()
+    
     if activation_listener:
         activation_listener.stop()
     
-    # Stop native overlay
     if native_overlay:
         native_overlay.stop()
     
-    # Stop scheduler
     if scheduler:
         scheduler.stop()
     
@@ -165,19 +170,22 @@ def handle_user_activation():
 
 def run_idle_loop(stop_event: threading.Event):
     """
-    IDLE loop - just waits for keyboard activation
-    Does NOT record audio or show UI
+    IDLE loop - waits for wake word OR keyboard activation
+    Does NOT record audio or show UI until activated
     """
     global activation_listener
     
-    logger.info("Assistant running in IDLE mode")
-    logger.info("Press Ctrl+Space to activate")
+    wake_word_enabled = wake_word_detector is not None
     
-    # Start keyboard listener
-    activation_listener = ActivationListener(on_activate=handle_user_activation)
-    activation_listener.start()
+    if wake_word_enabled:
+        logger.info("Assistant running in IDLE mode - listening for 'Hey Computer'")
+    else:
+        logger.info("Assistant running in IDLE mode")
+        logger.info("Press Ctrl+Space to activate")
+        
+        activation_listener = ActivationListener(on_activate=handle_user_activation)
+        activation_listener.start()
     
-    # Just wait for stop signal
     while not stop_event.is_set():
         stop_event.wait(timeout=1.0)
     
@@ -281,18 +289,15 @@ def main_console():
 
 def main_tray():
     """Run in system tray mode with embedded webview overlay"""
-    logger.info("Starting in SYSTEM TRAY mode (On-Demand with WebView)")
+    logger.info("Starting in SYSTEM TRAY mode")
     
     try:
-        # Initialize components (creates webview window)
         initialize_components()
         
-        # Start idle loop in BACKGROUND thread (not main)
         stop_event = threading.Event()
         idle_thread = threading.Thread(target=run_idle_loop, args=(stop_event,), daemon=True)
         idle_thread.start()
         
-        # Start system tray in BACKGROUND thread
         def run_tray():
             def on_exit():
                 stop_event.set()
@@ -304,16 +309,19 @@ def main_tray():
             )
             
             logger.info("System tray starting...")
-            tray.run()  # Blocking in background thread
+            tray.run()
         
         tray_thread = threading.Thread(target=run_tray, daemon=True)
         tray_thread.start()
         
-        # Run webview in MAIN thread (required on Windows)
-        logger.info("Starting webview overlay in main thread...")
-        logger.info("Press Ctrl+Space to activate")
-        native_overlay.start_blocking()  # Blocking call in main thread
+        wake_word_enabled = wake_word_detector is not None
+        if wake_word_enabled:
+            logger.info("Starting webview overlay - say 'Hey Computer' to activate")
+        else:
+            logger.info("Starting webview overlay - press Ctrl+Space to activate")
         
+        native_overlay.start_blocking()
+
     except Exception as e:
         logger.error(f"Fatal error in tray mode: {e}", exc_info=True)
         sys.exit(1)

@@ -3,15 +3,13 @@ import sys
 import os
 from pathlib import Path
 
-# Determine base directory
 BASE_DIR = Path(__file__).parent
 dist_path = BASE_DIR / "ui" / "dist"
 
 if not dist_path.exists():
-    print("Error: content/ui/dist not found. Please run 'npm run build' in ui/ directory first.")
+    print("Error: ui/dist not found. Please run 'npm run build' in ui/ directory first.")
     sys.exit(1)
 
-# Locate Azure Speech SDK DLLs
 try:
     import azure.cognitiveservices.speech as speechsdk
     speech_sdk_dir = Path(speechsdk.__file__).parent
@@ -26,7 +24,7 @@ build_args = [
     'chatur/main.py',
     '--name=ChaturAssistant',
     '--onefile',
-    '--noconsole',  # Hide the console window (GUI mode)
+    '--noconsole',
     '--clean',
     '--add-data=ui/dist;ui/dist',
     '--add-data=config/config.yaml;config',
@@ -51,6 +49,13 @@ build_args = [
     '--hidden-import=webview.platforms.winforms',
     '--hidden-import=clr_loader',
     '--hidden-import=pythonnet',
+    '--hidden-import=pvporcupine',
+    '--hidden-import=pyaudio',
+    '--hidden-import=pynput',
+    '--hidden-import=pynput.keyboard',
+    '--hidden-import=google.api_core',
+    '--hidden-import=googleapiclient',
+    '--hidden-import=googleapiclient.discovery',
     '--exclude-module=tensorflow',
     '--exclude-module=torch',
     '--exclude-module=pandas',
@@ -60,9 +65,9 @@ build_args = [
     '--exclude-module=IPython',
     '--collect-all=chatur',
     '--collect-all=webview',
+    '--collect-all=pvporcupine',
 ]
 
-# Add Azure Speech SDK DLLs if found
 if speech_sdk_dir and speech_sdk_dir.exists():
     dll_files = list(speech_sdk_dir.glob('*.dll'))
     for dll in dll_files:
@@ -71,4 +76,7 @@ if speech_sdk_dir and speech_sdk_dir.exists():
 
 PyInstaller.__main__.run(build_args)
 
-print("Build Complete. Executable is in dist/ChaturAssistant.exe")
+print("\n" + "="*50)
+print("Build Complete!")
+print("Executable: dist/ChaturAssistant.exe")
+print("="*50)
