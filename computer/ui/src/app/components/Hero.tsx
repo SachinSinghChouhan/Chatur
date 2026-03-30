@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { Mic, Github, Download } from 'lucide-react';
+import { Mic } from 'lucide-react';
 
 const TypewriterText = ({ text, delay = 0 }: { text: string; delay?: number }) => {
   const letters = Array.from(text);
 
   const container = {
     hidden: { opacity: 0 },
-    visible: (i = 1) => ({
+    visible: () => ({
       opacity: 1,
       transition: { staggerChildren: 0.05, delayChildren: delay }
     })
@@ -18,7 +18,7 @@ const TypewriterText = ({ text, delay = 0 }: { text: string; delay?: number }) =
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 12,
         stiffness: 100,
       }
@@ -27,7 +27,7 @@ const TypewriterText = ({ text, delay = 0 }: { text: string; delay?: number }) =
       opacity: 0,
       y: 20,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 12,
         stiffness: 100,
       }
@@ -128,40 +128,8 @@ export function Hero() {
           className="text-xl md:text-2xl mb-12 max-w-2xl mx-auto"
           style={{ color: 'var(--text-secondary)' }}
         >
-          <p>A bilingual personal voice assistant for Windows.</p>
-          <p className="mt-2 text-[var(--accent-primary)]">Speak naturally in English or Hindi.</p>
-        </motion.div>
-
-        {/* CTA Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 2, ease: 'easeOut' }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-        >
-          <button
-            className="group px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] relative overflow-hidden"
-            style={{
-              backgroundColor: 'var(--accent-primary)',
-              color: 'var(--text-primary)',
-            }}
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              <Download className="w-5 h-5" />
-              Download for Windows
-            </span>
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-          </button>
-          <button
-            className="px-8 py-4 rounded-lg flex items-center gap-2 border transition-all duration-200 hover:bg-[var(--surface-card)] hover:border-[var(--accent-primary)]"
-            style={{
-              borderColor: 'var(--surface-border)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            <Github className="w-5 h-5" />
-            View on GitHub
-          </button>
+          <p>A personal voice assistant for Windows.</p>
+          <p className="mt-2 text-[var(--accent-primary)]">Speak naturally to control your computer.</p>
         </motion.div>
 
         {/* Version info */}

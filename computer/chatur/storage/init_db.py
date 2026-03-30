@@ -2,17 +2,17 @@
 
 import sqlite3
 from pathlib import Path
-import os
+from chatur.utils.platform import get_app_data_dir, get_default_apps
 
-DB_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'computer.db'
+DB_PATH = get_app_data_dir() / 'computer.db'
 
 def init_database():
     """Initialize database with schema and default data"""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
+
     # Create tables
     cursor.executescript('''
         -- Reminders
@@ -25,9 +25,9 @@ def init_database():
             language VARCHAR(10) DEFAULT 'en',
             UNIQUE(text, scheduled_time)
         );
-        CREATE INDEX IF NOT EXISTS idx_reminders_scheduled 
+        CREATE INDEX IF NOT EXISTS idx_reminders_scheduled
         ON reminders(scheduled_time, triggered);
-        
+
         -- Timers
         CREATE TABLE IF NOT EXISTS timers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,9 +39,9 @@ def init_database():
             cancelled BOOLEAN DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
-        CREATE INDEX IF NOT EXISTS idx_timers_end_time 
+        CREATE INDEX IF NOT EXISTS idx_timers_end_time
         ON timers(end_time, completed);
-        
+
         -- Notes
         CREATE TABLE IF NOT EXISTS notes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +52,7 @@ def init_database():
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         CREATE INDEX IF NOT EXISTS idx_notes_key ON notes(key);
-        
+
         -- Apps
         CREATE TABLE IF NOT EXISTS apps (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,7 +65,7 @@ def init_database():
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         CREATE INDEX IF NOT EXISTS idx_apps_name ON apps(name);
-        
+
         -- Conversation History
         CREATE TABLE IF NOT EXISTS conversation_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,9 +76,9 @@ def init_database():
             session_id TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         );
-        CREATE INDEX IF NOT EXISTS idx_conversation_timestamp 
+        CREATE INDEX IF NOT EXISTS idx_conversation_timestamp
         ON conversation_history(timestamp DESC);
-        
+
         -- Config
         CREATE TABLE IF NOT EXISTS config (
             key TEXT PRIMARY KEY,
@@ -86,26 +86,13 @@ def init_database():
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     ''')
-    
-    # Insert default apps
-    default_apps = [
-        ('brave', 'Brave Browser', 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe', 'exe', 'browser,brave', 1),
-        ('chrome', 'Google Chrome', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', 'exe', 'browser,google', 1),
-        ('firefox', 'Mozilla Firefox', 'C:\\Program Files\\Mozilla Firefox\\firefox.exe', 'exe', 'browser,mozilla', 1),
-        ('edge', 'Microsoft Edge', 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', 'exe', 'browser,microsoft', 1),
-        ('gmail', 'Gmail', 'https://mail.google.com', 'url', 'email,mail', 1),
-        ('calculator', 'Calculator', 'calc.exe', 'exe', 'calc', 1),
-        ('notepad', 'Notepad', 'notepad.exe', 'exe', 'text,editor', 1),
-        ('explorer', 'File Explorer', 'explorer.exe', 'exe', 'files,folder', 1),
-        ('whatsapp', 'WhatsApp', 'C:\\Users\\' + os.getenv('USERNAME', 'User') + '\\AppData\\Local\\WhatsApp\\WhatsApp.exe', 'exe', 'chat,messaging', 1),
-        ('spotify', 'Spotify', 'C:\\Users\\' + os.getenv('USERNAME', 'User') + '\\AppData\\Roaming\\Spotify\\Spotify.exe', 'exe', 'music,audio', 1),
-    ]
-    
+
+    # Insert platform-specific default apps
     cursor.executemany('''
         INSERT OR IGNORE INTO apps (name, display_name, path, app_type, aliases, is_default)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', default_apps)
-    
+    ''', get_default_apps())
+
     # Insert default config
     default_config = [
         ('wake_word_sensitivity', '0.5'),
@@ -116,14 +103,14 @@ def init_database():
         ('reminder_check_interval', '30'),
         ('max_conversation_history', '100'),
     ]
-    
     cursor.executemany('''
         INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)
     ''', default_config)
-    
+
     conn.commit()
     conn.close()
     print(f"Database initialized at {DB_PATH}")
+
 
 if __name__ == '__main__':
     init_database()

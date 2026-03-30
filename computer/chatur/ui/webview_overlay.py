@@ -1,9 +1,15 @@
 """Embedded webview overlay using pywebview to display React UI"""
 
-import pywebview as webview
-import threading
-from pathlib import Path
 from typing import Optional, Callable
+
+try:
+    import webview
+except Exception:
+    webview = None
+
+import threading
+import sys
+from pathlib import Path
 from chatur.utils.logger import setup_logger
 from chatur.core.assistant_state import AssistantState
 import time
@@ -30,6 +36,17 @@ class WebViewOverlay:
     
     def create_window(self):
         """Create the webview window (call before start)"""
+        if webview is None:
+            logger.error("pywebview backend is unavailable. Install a supported GUI backend for Linux.")
+            return
+
+        if sys.platform.startswith('linux'):
+            try:
+                import gi  # type: ignore # noqa: F401
+            except Exception:
+                logger.error("python3-gi is required for Linux overlay. Skipping desktop overlay.")
+                return
+
         overlay_file = self.static_dir / "overlay.html"
         
         # Fallback to index.html if overlay.html doesn't exist
@@ -48,31 +65,54 @@ class WebViewOverlay:
         file_uri = f'file:///{str(overlay_file.absolute()).replace(chr(92), "/")}'
         
         # Create window
-        self.window = webview.create_window(
-            title='Voice Assistant',
-            url=file_uri,
-            width=400,
-            height=250,
-            resizable=False,
-            frameless=True,
-            easy_drag=False,
-            on_top=True,
-            hidden=True  # Start hidden (IDLE)
-        )
-        
-        logger.info(f"WebView window created: {file_uri}")
-        self._ready_event.set()
+        try:
+            self.window = webview.create_window(
+                title='Voice Assistant',
+                url=file_uri,
+                width=400,
+                height=250,
+                resizable=False,
+                frameless=True,
+                easy_drag=False,
+                on_top=True,
+                hidden=True  # Start hidden (IDLE)
+            )
+
+            logger.info(f"WebView window created: {file_uri}")
+            self._ready_event.set()
+        except Exception as e:
+            logger.error(f"Failed to create webview window: {e}")
     
     def start_blocking(self):
         """Start webview (blocking - must be called from main thread)"""
+        if webview is None:
+            logger.error("Cannot start webview - backend not available")
+            return
+
         if not self.window:
             logger.error("Window not created. Call create_window() first")
             return
         
         logger.info("Starting webview in main thread...")
-        
+
         # Start webview (blocking call)
-        webview.start(debug=False)
+        try:
+            if sys.platform.startswith('linux'):
+                # On Linux, try GTK first (no xcb dependency), fall back to Qt.
+                started = False
+                for backend in ('gtk', 'qt'):
+                    try:
+                        webview.start(debug=False, gui=backend)
+                        started = True
+                        break
+                    except Exception as backend_err:
+                        logger.warning(f"WebView backend '{backend}' failed: {backend_err}")
+                if not started:
+                    logger.error("All WebView backends failed on Linux")
+            else:
+                webview.start(debug=False)
+        except Exception as e:
+            logger.error(f"WebView failed to start: {e}")
         
         logger.info("WebView stopped")
     

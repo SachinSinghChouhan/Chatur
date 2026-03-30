@@ -1,8 +1,12 @@
 """Keyboard activation handler for on-demand assistant triggering"""
 
-from pynput import keyboard
 from typing import Callable
 from chatur.utils.logger import setup_logger
+
+try:
+    from pynput import keyboard
+except Exception:
+    keyboard = None
 
 logger = setup_logger('chatur.activation')
 
@@ -18,6 +22,10 @@ class ActivationListener:
         """Start listening for activation hotkey"""
         if self._active:
             logger.warning("Activation listener already running")
+            return
+
+        if keyboard is None:
+            logger.warning("pynput keyboard backend unavailable - Ctrl+Space activation disabled")
             return
         
         try:

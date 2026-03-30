@@ -3,9 +3,9 @@
 from typing import List, Optional
 import sqlite3
 from pathlib import Path
-import os
+from chatur.utils.platform import get_app_data_dir
 
-DB_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'computer.db'
+DB_PATH = get_app_data_dir() / 'computer.db'
 
 class BaseRepository:
     """Base class for all repositories"""

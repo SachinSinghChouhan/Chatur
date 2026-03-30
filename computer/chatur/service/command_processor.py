@@ -1,20 +1,10 @@
 """Command processor - integrates all handlers"""
 
+import importlib
+from typing import Any, Dict
+
 from chatur.core.llm import LLMClient
 from chatur.core.tts import TextToSpeech
-from chatur.handlers.reminder import ReminderHandler
-from chatur.handlers.timer import TimerHandler
-from chatur.handlers.notes import NotesHandler
-from chatur.handlers.qa import QAHandler
-from chatur.handlers.app_launcher import AppLauncherHandler
-from chatur.handlers.media_control import MediaControlHandler
-from chatur.handlers.file_search import FileSearchHandler
-from chatur.handlers.weather import WeatherHandler
-from chatur.handlers.system_info import SystemInfoHandler
-from chatur.handlers.math import MathHandler
-from chatur.handlers.calendar import CalendarHandler
-from chatur.handlers.email import GmailHandler
-from chatur.handlers.tasks import GoogleTasksHandler
 from chatur.storage.conversation_repository import ConversationRepository
 from chatur.models.intent import IntentType
 from chatur.utils.logger import setup_logger
@@ -31,23 +21,31 @@ class CommandProcessor:
         self.conversation_repo = ConversationRepository()
         
         # Initialize handlers
-        self.handlers = {
-            IntentType.REMINDER: ReminderHandler(),
-            IntentType.TIMER: TimerHandler(tts_engine=tts_engine),
-            IntentType.NOTE: NotesHandler(),
-            IntentType.QUESTION: QAHandler(llm_client, self.conversation_repo),
-            IntentType.APP_LAUNCH: AppLauncherHandler(),
-            IntentType.MEDIA_CONTROL: MediaControlHandler(),
-            IntentType.FILE_SEARCH: FileSearchHandler(),
-            IntentType.WEATHER: WeatherHandler(),
-            IntentType.SYSTEM_INFO: SystemInfoHandler(),
-            IntentType.MATH: MathHandler(),
-            IntentType.CALENDAR: CalendarHandler(),
-            IntentType.EMAIL: GmailHandler(),
-            IntentType.TASK: GoogleTasksHandler(),
-        }
-        
-        logger.info("Command processor initialized with all handlers")
+        self.handlers: Dict[IntentType, Any] = {}
+        self._register_handler(IntentType.REMINDER, 'chatur.handlers.reminder', 'ReminderHandler')
+        self._register_handler(IntentType.TIMER, 'chatur.handlers.timer', 'TimerHandler', tts_engine=tts_engine)
+        self._register_handler(IntentType.NOTE, 'chatur.handlers.notes', 'NotesHandler')
+        self._register_handler(IntentType.QUESTION, 'chatur.handlers.qa', 'QAHandler', llm_client, self.conversation_repo)
+        self._register_handler(IntentType.APP_LAUNCH, 'chatur.handlers.app_launcher', 'AppLauncherHandler')
+        self._register_handler(IntentType.MEDIA_CONTROL, 'chatur.handlers.media_control', 'MediaControlHandler')
+        self._register_handler(IntentType.FILE_SEARCH, 'chatur.handlers.file_search', 'FileSearchHandler')
+        self._register_handler(IntentType.WEATHER, 'chatur.handlers.weather', 'WeatherHandler')
+        self._register_handler(IntentType.SYSTEM_INFO, 'chatur.handlers.system_info', 'SystemInfoHandler')
+        self._register_handler(IntentType.MATH, 'chatur.handlers.math', 'MathHandler')
+        self._register_handler(IntentType.CALENDAR, 'chatur.handlers.calendar', 'CalendarHandler')
+        self._register_handler(IntentType.EMAIL, 'chatur.handlers.email', 'GmailHandler')
+        self._register_handler(IntentType.TASK, 'chatur.handlers.tasks', 'GoogleTasksHandler')
+
+        logger.info(f"Command processor initialized with {len(self.handlers)} handlers")
+
+    def _register_handler(self, intent_type: IntentType, module_path: str, class_name: str, *args, **kwargs) -> None:
+        """Safely register a handler; skip it if dependencies are unavailable."""
+        try:
+            module = importlib.import_module(module_path)
+            handler_cls = getattr(module, class_name)
+            self.handlers[intent_type] = handler_cls(*args, **kwargs)
+        except Exception as e:
+            logger.warning(f"Skipping {class_name}: {e}")
     
     def process_command(self, command_text: str) -> str:
         """Process a voice command and return response"""

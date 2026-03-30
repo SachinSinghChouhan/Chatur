@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'motion/react';
-import { Download, Github, Shield, Code, Layers } from 'lucide-react';
+import { Download, Shield, Code, Layers } from 'lucide-react';
 
 const highlights = [
   { icon: Shield, text: 'Privacy-first design' },
@@ -43,24 +43,24 @@ export function DownloadCTA() {
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <button
-              className="px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-200 hover:opacity-90 shadow-lg"
+              className="px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-200 hover:bg-[var(--accent-primary)] hover:border-[var(--accent-primary)] group shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] bg-black"
               style={{
-                backgroundColor: 'var(--accent-primary)',
                 color: 'var(--text-primary)',
+                border: '1px solid var(--surface-border)',
               }}
             >
               <Download className="w-5 h-5" />
               Download for Windows
             </button>
             <button
-              className="px-8 py-4 rounded-lg flex items-center gap-2 border transition-all duration-200 hover:bg-[var(--surface-card)]"
+              className="px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-200 hover:bg-[var(--accent-primary)] hover:border-[var(--accent-primary)] group shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] bg-black"
               style={{
-                borderColor: 'var(--surface-border)',
-                color: 'var(--text-secondary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--surface-border)',
               }}
             >
-              <Github className="w-5 h-5" />
-              View on GitHub
+              <Download className="w-5 h-5" />
+              Download for Ubuntu
             </button>
           </div>
 

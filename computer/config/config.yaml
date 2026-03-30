@@ -20,10 +20,10 @@ browser:
 
 # Wake Word Detection
 wake_word:
-  enabled: true  # Set to true to enable wake word detection
+  enabled: false  # Set to true to enable wake word detection (requires PORCUPINE_ACCESS_KEY)
   sensitivity: 0.5
   keyword: "computer"
-  keyword_path: "resources/wake_words/computer_windows.ppn"
+  # keyword_path is resolved dynamically by wake_word.py for the current platform
 
 # Azure Speech Services
 azure:
@@ -59,12 +59,11 @@ scheduler:
 # File Search
 file_search:
   search_locations:
-    - "Desktop"
-    - "Documents"
-    - "Downloads"
-    - "C:\\"
-    - "D:\\"
+    - "~/Desktop"
+    - "~/Documents"
+    - "~/Downloads"
     - "~"  # Home directory
+    # Windows-specific paths are added automatically via get_default_file_search_paths()
   max_results: 10
   timeout_seconds: 30
   supported_extensions:
@@ -120,11 +119,12 @@ app_launch:
     - explorer
     - whatsapp
     - spotify
-  browser_close_apps:  # Apps to close when closing browser
-    - chrome.exe
-    - firefox.exe
-    - msedge.exe
-    - brave.exe
+  browser_close_apps:  # Process name stems used to close browsers (cross-platform, no .exe needed)
+    - chrome
+    - chromium
+    - firefox
+    - msedge
+    - brave
 
 # Language Detection
 language:

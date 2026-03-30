@@ -1,7 +1,6 @@
 """File search handler for finding and opening files/folders"""
 
 import os
-import subprocess
 import glob
 from pathlib import Path
 from typing import List, Optional
@@ -10,6 +9,7 @@ from chatur.models.intent import Intent, IntentType
 from chatur.utils.logger import setup_logger
 from chatur.utils.config import config
 from chatur.utils.responses import ResponseBuilder
+from chatur.utils.platform import open_path, get_default_file_search_paths
 
 logger = setup_logger('chatur.handlers.file_search')
 
@@ -18,9 +18,13 @@ class FileSearchHandler(BaseHandler):
     
     def __init__(self) -> None:
         self.search_paths: List[str] = []
-        for location in config.file_search_locations:
+        configured = config.file_search_locations
+        # Use config locations if they exist, otherwise fall back to platform defaults
+        locations = configured if configured else get_default_file_search_paths()
+        for location in locations:
             expanded = os.path.expanduser(location)
-            self.search_paths.append(expanded)
+            if os.path.exists(expanded):
+                self.search_paths.append(expanded)
     
     def can_handle(self, intent: Intent) -> bool:
         """Check if this is a file search intent"""
@@ -91,21 +95,16 @@ class FileSearchHandler(BaseHandler):
             
             # Sort by relevance (exact matches first)
             results.sort(key=lambda p: (
-                0 if query_lower == os.path.basename(p).lower() else 1,
-                len(os.path.basename(p))
+                0 if query_lower == os.path.basename(str(p)).lower() else 1,
+                len(os.path.basename(str(p)))
             ))
             
-            return results[:max_results]
+            return results[:int(max_results)]
             
         except Exception as e:
             logger.error(f"Search error: {e}")
             return []
     
     def _open_path(self, path: str) -> bool:
-        """Open file or folder"""
-        try:
-            os.startfile(path)
-            return True
-        except Exception as e:
-            logger.error(f"Failed to open {path}: {e}")
-            return False
+        """Open file or folder using the platform-appropriate method"""
+        return open_path(path)

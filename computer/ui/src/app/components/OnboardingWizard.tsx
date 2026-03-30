@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog, DialogContent } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
@@ -34,6 +34,13 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
         localStorage.setItem('onboarding_complete', 'true');
         onComplete();
     };
+
+    useEffect(() => {
+        if (step === 2 && !isConnected && !isChecking) {
+            checkConnection();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [step]);
 
     return (
         <Dialog open={open} onOpenChange={() => { }}>
@@ -99,13 +106,23 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
                             </div>
 
                             {!isConnected && (
-                                <Button
-                                    onClick={checkConnection}
-                                    className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-                                    disabled={isChecking}
-                                >
-                                    {isChecking ? 'Checking...' : 'Check Connection'}
-                                </Button>
+                                <div className="flex gap-3 mt-2">
+                                    <Button
+                                        onClick={checkConnection}
+                                        className="bg-[var(--accent-primary)] text-black hover:bg-[var(--accent-primary)]/90"
+                                        disabled={isChecking}
+                                    >
+                                        {isChecking ? 'Checking...' : 'Check Connection'}
+                                    </Button>
+                                    <Button
+                                        onClick={() => setStep(3)}
+                                        variant="outline"
+                                        className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                                        disabled={isChecking}
+                                    >
+                                        Skip for now
+                                    </Button>
+                                </div>
                             )}
 
                             {isConnected && (

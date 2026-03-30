@@ -1,0 +1,15 @@
+{
+    "venvPath": "/home/sachinsinghchouhan/Work/Chatur",
+    "venv": ".venv",
+    "extraPaths": [
+        "."
+    ],
+    "executionEnvironments": [
+        {
+            "root": "."
+        }
+    ],
+    "pythonVersion": "3.8",
+    "typeCheckingMode": "basic",
+    "reportMissingImports": "warning"
+}

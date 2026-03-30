@@ -1,12 +1,12 @@
 """Gmail Handler"""
 
-import os
 import base64
 from pathlib import Path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from chatur.utils.platform import get_app_data_dir
 
 from chatur.handlers.base import BaseHandler
 from chatur.models.intent import Intent, IntentType
@@ -16,8 +16,8 @@ logger = setup_logger('chatur.handlers.email')
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-CREDENTIALS_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'credentials.json'
-TOKEN_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'token.json'
+CREDENTIALS_PATH = get_app_data_dir() / 'credentials.json'
+TOKEN_PATH = get_app_data_dir() / 'token.json'
 
 class GmailHandler(BaseHandler):
     """Handler for Gmail interactions"""
@@ -86,6 +86,9 @@ class GmailHandler(BaseHandler):
     def _read_emails(self, max_results: int = 3) -> str:
         """Read latest unread emails"""
         try:
+            if not self.service:
+                return "Not authenticated with email."
+                
             # List messages in INBOX that are UNREAD
             results = self.service.users().messages().list(
                 userId='me', 
@@ -101,6 +104,8 @@ class GmailHandler(BaseHandler):
             response_lines = [f"Here are your last {len(messages)} unread emails:"]
             
             for msg in messages:
+                if not self.service:
+                    break
                 txt = self.service.users().messages().get(userId='me', id=msg['id']).execute()
                 payload = txt['payload']
                 headers = payload['headers']
@@ -128,6 +133,9 @@ class GmailHandler(BaseHandler):
     def _search_emails(self, query: str) -> str:
         """Search emails"""
         try:
+            if not self.service:
+                return "Not authenticated with email."
+
             # Search query
             results = self.service.users().messages().list(
                 userId='me', 
@@ -143,6 +151,8 @@ class GmailHandler(BaseHandler):
             response_lines = [f"Found {len(messages)} recent emails properly matching '{query}':"]
             
             for msg in messages:
+                if not self.service:
+                    break
                 txt = self.service.users().messages().get(userId='me', id=msg['id']).execute()
                 payload = txt['payload']
                 headers = payload['headers']

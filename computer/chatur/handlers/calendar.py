@@ -1,6 +1,5 @@
 """Google Calendar Handler"""
 
-import os
 import datetime
 from pathlib import Path
 from google.auth.transport.requests import Request
@@ -8,6 +7,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import dateutil.parser
+from chatur.utils.platform import get_app_data_dir
 
 from chatur.handlers.base import BaseHandler
 from chatur.models.intent import Intent, IntentType
@@ -16,8 +16,8 @@ from chatur.utils.logger import setup_logger
 logger = setup_logger('chatur.handlers.calendar')
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
-CREDENTIALS_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'credentials.json'
-TOKEN_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'token.json'
+CREDENTIALS_PATH = get_app_data_dir() / 'credentials.json'
+TOKEN_PATH = get_app_data_dir() / 'token.json'
 
 class CalendarHandler(BaseHandler):
     """Handler for Google Calendar interactions"""
@@ -91,7 +91,11 @@ class CalendarHandler(BaseHandler):
             # Default to 5 events
             max_results = 5
             
-            events_result = self.service.events().list(
+            service = self.service
+            if not service:
+                return "Not authenticated with calendar."
+                
+            events_result = service.events().list(
                 calendarId='primary', 
                 timeMin=now,
                 maxResults=max_results, 
@@ -154,7 +158,11 @@ class CalendarHandler(BaseHandler):
                 },
             }
             
-            event = self.service.events().insert(calendarId='primary', body=event).execute()
+            service = self.service
+            if not service:
+                return "Not authenticated with calendar."
+                
+            event = service.events().insert(calendarId='primary', body=event).execute()
             
             return f"Okay, I've added '{summary}' to your calendar for {start_dt.strftime('%A at %I:%M %p')}."
             

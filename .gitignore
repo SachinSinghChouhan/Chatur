@@ -3,11 +3,49 @@
 .venv/
 .credentials.json/
 
+# Environments and Secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
 # Build artifacts and distributions
 computer/build/
 computer/dist/
 computer/chatur/dist/
+build/
+dist/
+*.egg-info/
+.eggs/
 
 # Python compiled files
-*.pyc
+*.py[cod]
+*$py.class
 __pycache__/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+computer.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

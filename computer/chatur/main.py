@@ -3,6 +3,7 @@
 import sys
 import threading
 from pathlib import Path
+from typing import Callable, Optional
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,14 +13,10 @@ from chatur.storage.init_db import init_database
 from chatur.core.tts import TextToSpeech
 from chatur.core.stt import SpeechToText
 from chatur.core.llm import LLMClient
-from chatur.core.wake_word import WakeWordDetector, create_wake_word_detector
+from chatur.core.wake_word import create_wake_word_detector
 from chatur.service.command_processor import CommandProcessor
 from chatur.service.scheduler import ReminderScheduler
-from chatur.ui.system_tray import create_tray
-from chatur.ui.webview_overlay import WebViewOverlay
-from chatur.api.socket_server import run_api_server, broadcast_message_sync
 from chatur.core.assistant_state import AssistantStateMachine, AssistantState
-from chatur.core.activation import ActivationListener
 from chatur.utils.config import config
 
 logger = setup_logger('chatur')
@@ -35,9 +32,17 @@ wake_word_detector = None
 native_overlay = None
 
 
-def initialize_components():
+def _noop_broadcast(_event_type: str, _data: Optional[dict] = None) -> None:
+    """Fallback broadcast callback when API server is unavailable."""
+    return
+
+
+broadcast_callback: Callable[[str, Optional[dict]], None] = _noop_broadcast
+
+
+def initialize_components(enable_ui: bool = True):
     """Initialize all core components"""
-    global tts, stt, llm, processor, scheduler, state_machine, native_overlay, wake_word_detector
+    global tts, stt, llm, processor, scheduler, state_machine, native_overlay, wake_word_detector, broadcast_callback
     
     logger.info("=" * 60)
     logger.info("Computer Voice Assistant - Initializing")
@@ -54,24 +59,42 @@ def initialize_components():
     
     logger.info("Initializing LLM client...")
     llm = LLMClient()
-    
-    logger.info("Starting API server...")
-    api_thread = threading.Thread(target=run_api_server, daemon=True)
-    api_thread.start()
 
-    logger.info("Initializing webview overlay...")
-    if getattr(sys, 'frozen', False):
-        static_dir = Path(sys._MEIPASS) / "ui" / "dist"
+    broadcast_callback = _noop_broadcast
+    native_overlay = None
+
+    if enable_ui:
+        try:
+            from chatur.api.socket_server import run_api_server, broadcast_message_sync
+
+            logger.info("Starting API server...")
+            api_thread = threading.Thread(target=run_api_server, daemon=True)
+            api_thread.start()
+            broadcast_callback = broadcast_message_sync
+        except Exception as e:
+            logger.warning(f"API server unavailable - UI broadcasting disabled: {e}")
+
+        try:
+            from chatur.ui.webview_overlay import WebViewOverlay
+
+            logger.info("Initializing webview overlay...")
+            if getattr(sys, 'frozen', False):
+                static_dir = Path(sys._MEIPASS) / "ui" / "dist"
+            else:
+                static_dir = Path(__file__).parent.parent / "ui" / "dist"
+
+            native_overlay = WebViewOverlay(static_dir=static_dir)
+            native_overlay.create_window()
+        except Exception as e:
+            native_overlay = None
+            logger.warning(f"Webview overlay unavailable: {e}")
     else:
-        static_dir = Path(__file__).parent.parent / "ui" / "dist"
-    
-    native_overlay = WebViewOverlay(static_dir=static_dir)
-    native_overlay.create_window()
+        logger.info("Console mode: skipping API server and desktop overlay initialization")
 
     logger.info("Initializing state machine...")
     def on_state_change(event_type, data):
-        broadcast_message_sync(event_type, data)
-        if event_type == 'state_change' and data.get('state'):
+        broadcast_callback(event_type, data)
+        if native_overlay and event_type == 'state_change' and data.get('state'):
             state_str = data['state']
             state = AssistantState(state_str)
             native_overlay.update_state(state)
@@ -79,7 +102,7 @@ def initialize_components():
     state_machine = AssistantStateMachine(broadcast_callback=on_state_change)
 
     logger.info("Initializing command processor...")
-    processor = CommandProcessor(llm, tts, broadcast_callback=broadcast_message_sync)
+    processor = CommandProcessor(llm, tts, broadcast_callback=broadcast_callback)
     
     logger.info("Initializing reminder scheduler...")
     scheduler = ReminderScheduler(tts_engine=tts)
@@ -133,6 +156,10 @@ def handle_user_activation():
     Triggers one complete interaction cycle: Listen → Process → Speak → Idle
     """
     global state_machine, stt, processor
+
+    if not state_machine or not stt or not processor:
+        logger.warning("Activation ignored - assistant components are not fully initialized")
+        return
     
     if not state_machine.is_idle():
         logger.warning("Activation ignored - assistant already active")
@@ -183,8 +210,13 @@ def run_idle_loop(stop_event: threading.Event):
         logger.info("Assistant running in IDLE mode")
         logger.info("Press Ctrl+Space to activate")
         
-        activation_listener = ActivationListener(on_activate=handle_user_activation)
-        activation_listener.start()
+        try:
+            from chatur.core.activation import ActivationListener
+
+            activation_listener = ActivationListener(on_activate=handle_user_activation)
+            activation_listener.start()
+        except Exception as e:
+            logger.warning(f"Hotkey activation unavailable on this environment: {e}")
     
     while not stop_event.is_set():
         stop_event.wait(timeout=1.0)
@@ -204,7 +236,7 @@ def run_assistant_loop(stop_event: threading.Event):
     logger.info("Assistant loop started")
     
     # Check if STT is available
-    use_voice = stt.recognizer is not None
+    use_voice = bool(stt and getattr(stt, 'recognizer', None) is not None)
     
     if not use_voice:
         logger.warning("STT not available - text mode only")
@@ -213,7 +245,7 @@ def run_assistant_loop(stop_event: threading.Event):
     while not stop_event.is_set():
         try:
             # Text input mode (for now, until voice is fully working)
-            broadcast_message_sync('listening')
+            broadcast_callback('listening')
             command = input("You: ").strip()
             
             if not command:
@@ -246,13 +278,14 @@ def main_console():
     
     try:
         # Initialize components
-        initialize_components()
+        initialize_components(enable_ui=False)
         
         # Welcome message
-        tts.speak("Hello, I am Computer. I'm ready to help you.", 'en')
+        if tts:
+            tts.speak("Hello, I am Computer. I'm ready to help you.", 'en')
         
         # Check if STT is available
-        if not stt.recognizer:
+        if not stt or not stt.recognizer:
             print("\n⚠️  Azure Speech-to-Text not configured")
             print("Running in TEXT MODE - type your commands\n")
         else:
@@ -292,7 +325,7 @@ def main_tray():
     logger.info("Starting in SYSTEM TRAY mode")
     
     try:
-        initialize_components()
+        initialize_components(enable_ui=True)
         
         stop_event = threading.Event()
         idle_thread = threading.Thread(target=run_idle_loop, args=(stop_event,), daemon=True)
@@ -302,11 +335,18 @@ def main_tray():
             def on_exit():
                 stop_event.set()
                 shutdown_components()
-            
-            tray = create_tray(
-                managed_service=None,
-                on_exit=on_exit
-            )
+
+            try:
+                from chatur.ui.system_tray import create_tray
+
+                tray = create_tray(
+                    managed_service=None,
+                    on_exit=on_exit
+                )
+            except Exception as e:
+                logger.warning(f"System tray unavailable in this environment: {e}")
+                stop_event.set()
+                return
             
             logger.info("System tray starting...")
             tray.run()
@@ -320,7 +360,16 @@ def main_tray():
         else:
             logger.info("Starting webview overlay - press Ctrl+Space to activate")
         
-        native_overlay.start_blocking()
+        if native_overlay:
+            native_overlay.start_blocking()
+            if not stop_event.is_set():
+                logger.warning("Desktop overlay closed/unavailable - continuing in tray/headless mode")
+
+        if not native_overlay:
+            logger.warning("Desktop overlay unavailable - running headless idle loop")
+
+        while not stop_event.is_set():
+            stop_event.wait(timeout=1.0)
 
     except Exception as e:
         logger.error(f"Fatal error in tray mode: {e}", exc_info=True)

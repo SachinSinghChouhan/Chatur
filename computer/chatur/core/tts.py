@@ -1,7 +1,12 @@
 """Text-to-Speech engine with Hindi transliteration fallback"""
 
 from typing import Optional, List
-import pyttsx3
+
+try:
+    import pyttsx3
+except Exception:
+    pyttsx3 = None
+
 from chatur.utils.logger import setup_logger
 from chatur.utils.config import config
 
@@ -11,7 +16,19 @@ class TextToSpeech:
     """Text-to-Speech wrapper using pyttsx3"""
     
     def __init__(self) -> None:
-        self.engine = pyttsx3.init()
+        self.engine = None
+
+        if pyttsx3 is None:
+            logger.warning("pyttsx3 is not installed - TTS output disabled")
+            self.hindi_voice = None
+            return
+
+        try:
+            self.engine = pyttsx3.init()
+        except Exception as e:
+            logger.warning(f"Failed to initialize TTS engine - speech output disabled: {e}")
+            self.hindi_voice = None
+            return
         
         voices = self.engine.getProperty('voices')
         self.hindi_voice: Optional[str] = None
@@ -55,6 +72,10 @@ class TextToSpeech:
     
     def speak(self, text: str, language: str = 'en') -> None:
         """Speak text using TTS"""
+        if not self.engine:
+            logger.info(f"TTS unavailable. Response text: {text}")
+            return
+
         try:
             safe_text = text.encode('ascii', 'replace').decode('ascii')
             logger.info(f"Speaking: {safe_text} (language: {language})")

@@ -3,8 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Hero } from '@/app/components/Hero';
 import { HowItWorks } from '@/app/components/HowItWorks';
 import { Features } from '@/app/components/Features';
-import { BilingualDemo } from '@/app/components/BilingualDemo';
-import { DeveloperSection } from '@/app/components/DeveloperSection';
+import { DemoSection } from '@/app/components/DemoSection';
 import { DownloadCTA } from '@/app/components/DownloadCTA';
 import { Footer } from '@/app/components/Footer';
 import { MotionProvider } from '@/app/components/motion-config';
@@ -53,10 +52,7 @@ export default function App() {
                 <Features />
               </div>
               <div id="demo">
-                <BilingualDemo />
-              </div>
-              <div id="developers">
-                <DeveloperSection />
+                <DemoSection />
               </div>
               <DownloadCTA />
               <Footer />

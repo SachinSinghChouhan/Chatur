@@ -2,7 +2,12 @@
 
 import os
 from typing import Optional, Tuple, Callable
-import azure.cognitiveservices.speech as speechsdk
+
+try:
+    import azure.cognitiveservices.speech as speechsdk
+except Exception:
+    speechsdk = None
+
 from chatur.utils.logger import setup_logger
 
 logger = setup_logger('chatur.stt')
@@ -11,6 +16,12 @@ class SpeechToText:
     """Azure Speech-to-Text wrapper with improved audio handling"""
     
     def __init__(self) -> None:
+        if speechsdk is None:
+            logger.warning("Azure Speech SDK not installed - STT will not be available")
+            self.recognizer = None
+            self.speech_config = None
+            return
+
         speech_key = os.getenv('AZURE_SPEECH_KEY')
         speech_region = os.getenv('AZURE_SPEECH_REGION', 'centralindia')
         
@@ -75,7 +86,7 @@ class SpeechToText:
                 print("⚠️  No speech detected. Please:")
                 print("   - Speak louder")
                 print("   - Move closer to the microphone")
-                print("   - Check Windows microphone volume settings")
+                print("   - Check your system microphone/privacy settings")
                 return None
             
             elif result.reason == speechsdk.ResultReason.Canceled:

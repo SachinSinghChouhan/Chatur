@@ -12,8 +12,8 @@ import {
 const features = [
   {
     icon: Globe,
-    title: 'Bilingual Support',
-    description: 'Seamlessly switch between English and Hindi. Understands Hinglish naturally.',
+    title: 'Natural Conversations',
+    description: 'Understands your free-form speech without requiring rigid or formal syntax.',
   },
   {
     icon: Shield,
@@ -44,7 +44,6 @@ const features = [
 
 const FeatureCard = ({ feature, index }: { feature: any; index: number }) => {
   const divRef = useRef<HTMLDivElement>(null);
-  const [isFocused, setIsFocused] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
 
@@ -58,12 +57,10 @@ const FeatureCard = ({ feature, index }: { feature: any; index: number }) => {
   };
 
   const handleFocus = () => {
-    setIsFocused(true);
     setOpacity(1);
   };
 
   const handleBlur = () => {
-    setIsFocused(false);
     setOpacity(0);
   };
 

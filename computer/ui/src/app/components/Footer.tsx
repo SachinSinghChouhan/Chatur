@@ -1,4 +1,4 @@
-import { Github, Twitter, Mail, Heart } from 'lucide-react';
+import { Twitter, Mail, Heart } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -17,7 +17,7 @@ export function Footer() {
               About Chatur
             </h4>
             <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-              An open-source bilingual voice assistant that respects your privacy. Built with care for the Indian Windows user.
+              An open-source personal voice assistant that respects your privacy. Built with care for the Windows user.
             </p>
           </div>
 
@@ -72,13 +72,6 @@ export function Footer() {
               Community
             </h4>
             <div className="flex gap-4 mb-4">
-              <a
-                href="#"
-                className="hover:opacity-70 transition-opacity"
-                aria-label="GitHub"
-              >
-                <Github className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
-              </a>
               <a
                 href="#"
                 className="hover:opacity-70 transition-opacity"

@@ -1,11 +1,11 @@
 """Google Tasks Handler"""
 
-import os
 from pathlib import Path
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 import difflib
+from chatur.utils.platform import get_app_data_dir
 
 from chatur.handlers.base import BaseHandler
 from chatur.models.intent import Intent, IntentType
@@ -14,8 +14,8 @@ from chatur.utils.logger import setup_logger
 logger = setup_logger('chatur.handlers.tasks')
 
 SCOPES = ['https://www.googleapis.com/auth/tasks']
-TOKEN_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'token.json'
-CREDENTIALS_PATH = Path(os.getenv('APPDATA')) / 'Computer' / 'credentials.json'
+TOKEN_PATH = get_app_data_dir() / 'token.json'
+CREDENTIALS_PATH = get_app_data_dir() / 'credentials.json'
 
 class GoogleTasksHandler(BaseHandler):
     """Handler for Google Tasks interactions"""
@@ -122,6 +122,9 @@ class GoogleTasksHandler(BaseHandler):
             if due_date:
                 task_body['due'] = due_date
 
+            if not self.service:
+                return "Not authenticated with tasks."
+
             result = self.service.tasks().insert(tasklist='@default', body=task_body).execute()
             
             msg = f"Added '{clean_title}' to your tasks"
@@ -140,6 +143,9 @@ class GoogleTasksHandler(BaseHandler):
     def _list_tasks(self) -> str:
         """List upcoming tasks"""
         try:
+            if not self.service:
+                return "Not authenticated with tasks."
+
             # Fetch pending tasks
             results = self.service.tasks().list(tasklist='@default', maxResults=10, showCompleted=False).execute()
             items = results.get('items', [])
@@ -160,6 +166,9 @@ class GoogleTasksHandler(BaseHandler):
     def _complete_task(self, title: str) -> str:
         """Mark a task as complete by fuzzy matching the title"""
         try:
+            if not self.service:
+                return "Not authenticated with tasks."
+
             # 1. Fetch current tasks
             results = self.service.tasks().list(tasklist='@default', showCompleted=False).execute()
             items = results.get('items', [])
@@ -183,6 +192,9 @@ class GoogleTasksHandler(BaseHandler):
             
             if not task_item:
                 return "Error identifying the task ID."
+
+            if not self.service:
+                return "Not authenticated with tasks."
 
             # 3. Update the task status to 'completed'
             task_item['status'] = 'completed'

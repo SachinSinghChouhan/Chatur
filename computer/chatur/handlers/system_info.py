@@ -95,13 +95,15 @@ class SystemInfoHandler(BaseHandler):
     def _get_disk_info(self) -> str:
         """Get disk space"""
         try:
-            disk = psutil.disk_usage('/')
+            # Use the correct root path for each platform
+            root = 'C:\\' if platform.system() == 'Windows' else '/'
+            disk = psutil.disk_usage(root)
             percent = disk.percent
             free_gb = disk.free / (1024**3)
             total_gb = disk.total / (1024**3)
-            
+
             return f"Disk usage is {percent}%, {free_gb:.1f} GB free out of {total_gb:.1f} GB total"
-        
+
         except Exception as e:
             logger.error(f"Disk info error: {e}")
             return "Couldn't get disk information"

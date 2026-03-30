@@ -1,5 +1,4 @@
 import { motion } from 'motion/react';
-import { Github } from 'lucide-react';
 
 export function Navigation() {
   return (
@@ -46,22 +45,6 @@ export function Navigation() {
             style={{ color: 'var(--text-secondary)' }}
           >
             Demo
-          </a>
-          <a
-            href="#developers"
-            className="text-sm transition-opacity hover:opacity-70 hidden md:block"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Developers
-          </a>
-          <a
-            href="https://github.com"
-            className="flex items-center gap-2 text-sm transition-opacity hover:opacity-70"
-            style={{ color: 'var(--text-secondary)' }}
-            aria-label="GitHub Repository"
-          >
-            <Github className="w-4 h-4" />
-            <span className="hidden sm:inline">GitHub</span>
           </a>
         </div>
       </div>

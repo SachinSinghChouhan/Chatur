@@ -91,49 +91,50 @@ class AppLauncherHandler(BaseHandler):
     
     def _close_app(self, app: dict) -> bool:
         """Close/kill the application"""
+        import sys
         try:
             app_name = app['display_name'].lower()
             closed = False
-            
-            # Get process name from path
-            if app['app_type'] == 'executable':
-                # Extract exe name from path
+
+            # app_type is stored as 'exe' (not 'executable') in the database
+            if app['app_type'] == 'exe':
                 exe_name = os.path.basename(app['path']).lower()
-                
-                # Find and kill matching processes
+                # Strip .exe suffix for cross-platform matching
+                exe_stem = exe_name.replace('.exe', '')
+
                 for proc in psutil.process_iter(['name', 'exe']):
                     try:
                         proc_name = proc.info['name'].lower() if proc.info['name'] else ''
-                        proc_exe = proc.info['exe'].lower() if proc.info['exe'] else ''
-                        
-                        # Match by exe name or display name
-                        if (exe_name in proc_name or 
-                            app_name in proc_name or
-                            exe_name.replace('.exe', '') in proc_name):
-                            
+
+                        if (exe_stem in proc_name or app_name in proc_name):
                             logger.info(f"Killing process: {proc.info['name']} (PID: {proc.pid})")
                             proc.kill()
                             closed = True
-                            
+
                     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                         pass
-                
+
                 return closed
-            
+
             elif app['app_type'] == 'url':
-                # For URLs, close browser tabs (harder - just close Chrome/browser)
-                browser_names = ['chrome.exe', 'firefox.exe', 'msedge.exe']
+                # Cross-platform browser process names
+                if sys.platform == 'win32':
+                    browser_stems = ['chrome', 'firefox', 'msedge', 'brave']
+                else:
+                    browser_stems = ['chrome', 'chromium', 'firefox', 'brave', 'brave-browser']
+
                 for proc in psutil.process_iter(['name']):
                     try:
-                        if proc.info['name'].lower() in browser_names:
+                        proc_name = proc.info['name'].lower() if proc.info['name'] else ''
+                        if any(stem in proc_name for stem in browser_stems):
                             logger.info(f"Closing browser: {proc.info['name']}")
                             proc.kill()
                             closed = True
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
-                
+
                 return closed
-            
+
         except Exception as e:
             logger.error(f"Failed to close {app['display_name']}: {e}")
             return False

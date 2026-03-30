@@ -1,16 +1,13 @@
 import logging
-import os
 import sys
 from pathlib import Path
 from typing import Optional, Any, Dict
+from chatur.utils.platform import get_app_data_dir
 
 def setup_logger(name: str) -> logging.Logger:
     """Setup logger with UTF-8 safe file and console handlers"""
 
-    appdata = os.getenv('APPDATA')
-    if not appdata:
-        appdata = str(Path.home() / 'AppData' / 'Roaming')
-    log_dir = Path(appdata) / 'Computer' / 'logs'
+    log_dir = get_app_data_dir() / 'logs'
     log_dir.mkdir(parents=True, exist_ok=True)
 
     logger = logging.getLogger(name)
@@ -32,7 +29,12 @@ def setup_logger(name: str) -> logging.Logger:
 
     if sys.stdout is not None:
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.stream.reconfigure(encoding='utf-8')
+        # reconfigure is only available on TextIOWrapper (not all stdout types)
+        try:
+            if hasattr(console_handler.stream, 'reconfigure'):
+                console_handler.stream.reconfigure(encoding='utf-8') # type: ignore
+        except AttributeError:
+            pass
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
 

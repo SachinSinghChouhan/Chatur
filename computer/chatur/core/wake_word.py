@@ -2,10 +2,19 @@
 
 import os
 import threading
-from typing import Callable, Optional, List
+from typing import Callable, Optional, List, Any
 from pathlib import Path
-import pvporcupine
-import pyaudio
+
+try:
+    import pvporcupine
+except Exception:
+    pvporcupine = None
+
+try:
+    import pyaudio
+except Exception:
+    pyaudio = None
+
 from chatur.utils.logger import setup_logger
 from chatur.utils.config import config
 
@@ -33,9 +42,9 @@ class WakeWordDetector:
         self.keywords = keywords or ['computer']
         self.sensitivity = sensitivity
         
-        self.porcupine: Optional[pvporcupine.Porcupine] = None
-        self.audio_stream: Optional[pyAudio.PyAudio] = None
-        self.stream: Optional[pvporcupine._onnxruntime.OrtIO] = None
+        self.porcupine: Optional[Any] = None
+        self.audio_stream: Optional[Any] = None
+        self.stream: Optional[Any] = None
         
         self._running = False
         self._thread: Optional[threading.Thread] = None
@@ -44,6 +53,10 @@ class WakeWordDetector:
     
     def _init_porcupine(self) -> None:
         """Initialize Porcupine engine"""
+        if pvporcupine is None or pyaudio is None:
+            logger.warning("Wake word dependencies not installed - wake word detection disabled")
+            return
+
         try:
             access_key = os.getenv('PORCUPINE_ACCESS_KEY')
             if not access_key:
@@ -68,12 +81,13 @@ class WakeWordDetector:
             
             logger.info(f"Wake word detector initialized for: {self.keywords}")
             
-        except pvporcupine.PorcupineInvalidArgumentError as e:
-            logger.error(f"Invalid arguments for Porcupine: {e}")
-        except pvporcupine.PorcupineActivationError as e:
-            logger.error(f"Porcupine activation error: {e}")
         except Exception as e:
-            logger.error(f"Failed to initialize wake word detector: {e}")
+            if pvporcupine and isinstance(e, getattr(pvporcupine, 'PorcupineInvalidArgumentError', Exception)):
+                logger.error(f"Invalid arguments for Porcupine: {e}")
+            elif pvporcupine and isinstance(e, getattr(pvporcupine, 'PorcupineActivationError', Exception)):
+                logger.error(f"Porcupine activation error: {e}")
+            else:
+                logger.error(f"Failed to initialize wake word detector: {e}")
     
     def _get_keyword_path(self, keyword: str) -> Optional[str]:
         """Get the path to the keyword .ppn file"""
@@ -98,6 +112,10 @@ class WakeWordDetector:
     
     def start(self) -> bool:
         """Start listening for wake word"""
+        if pyaudio is None:
+            logger.error("Cannot start wake word detection - PyAudio is not available")
+            return False
+
         if not self.porcupine:
             logger.error("Cannot start - Porcupine not initialized")
             return False

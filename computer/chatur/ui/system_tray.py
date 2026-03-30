@@ -5,6 +5,7 @@ Provides a system tray icon with menu for controlling the assistant
 
 import os
 import sys
+import subprocess
 import threading
 from pathlib import Path
 from typing import Optional, Callable
@@ -12,6 +13,7 @@ from PIL import Image
 import pystray
 from pystray import MenuItem as item
 from chatur.utils.logger import setup_logger
+from chatur.utils.platform import get_app_data_dir
 from chatur.service.service_manager import ManagedService, ServiceCommand
 
 logger = setup_logger('chatur.system_tray')
@@ -203,21 +205,25 @@ class SystemTray:
     
     def _open_logs(self, icon, item):
         """Open the log file"""
-        log_file = Path("logs") / "chatur.log"
-        
+        log_file = get_app_data_dir() / 'logs' / 'computer.log'
+
         if log_file.exists():
-            # Open with default text editor
-            if sys.platform == 'win32':
-                os.startfile(log_file)
-            else:
-                os.system(f'xdg-open "{log_file}"')
-            logger.info("Opened log file")
+            try:
+                if sys.platform == 'win32':
+                    os.startfile(str(log_file))  # type: ignore[attr-defined]
+                elif sys.platform == 'darwin':
+                    subprocess.Popen(['open', str(log_file)])
+                else:
+                    subprocess.Popen(['xdg-open', str(log_file)])
+                logger.info(f"Opened log file: {log_file}")
+            except Exception as e:
+                logger.error(f"Failed to open log file: {e}")
         else:
-            logger.warning("Log file not found")
+            logger.warning(f"Log file not found: {log_file}")
             if self.icon:
                 self.icon.notify(
                     title="Voice Assistant",
-                    message="Log file not found"
+                    message=f"Log file not found: {log_file}"
                 )
     
     def _show_about(self, icon, item):

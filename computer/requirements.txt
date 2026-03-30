@@ -1,4 +1,8 @@
 # Speech Recognition
+# NOTE: pyaudio requires system dependency: portaudio
+#   Linux:   sudo apt install portaudio19-dev
+#   macOS:   brew install portaudio
+#   Windows: pre-compiled wheel ships with pip
 azure-cognitiveservices-speech==1.34.0
 pyaudio==0.2.14  # For microphone recording (Whisper/Google/Vosk STT)
 SpeechRecognition==3.10.0  # For Google STT
@@ -24,6 +28,10 @@ Pillow==10.1.0
 
 # Media Control
 pyautogui==0.9.54
+pynput>=1.7.6  # Cross-platform keyboard hotkeys (Ctrl+Space activation)
+# Windows-only: exact volume control via COM interface
+pycaw; sys_platform=="win32"
+comtypes; sys_platform=="win32"
 
 # Configuration
 PyYAML==6.0.1
@@ -46,3 +54,21 @@ google-auth-oauthlib==1.2.0
 
 # Embedded WebView Overlay
 pywebview==6.1
+# Linux webview backends:
+#   GTK  (preferred, no xcb issues):
+#     sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.0
+#   Qt   (fallback, installed via pip):
+qtpy>=2.4.1; sys_platform=="linux"
+PyQt6>=6.7.1; sys_platform=="linux"
+PyQt6-WebEngine>=6.7.0; sys_platform=="linux"
+# Linux also needs libportaudio for PyAudio:
+#   sudo apt install portaudio19-dev
+# Linux TTS (espeak backend for pyttsx3):
+#   sudo apt install espeak espeak-ng libespeak-ng-dev
+
+# Local API server for desktop overlay state sync
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# Build Tools
+pyinstaller>=5.13.2
