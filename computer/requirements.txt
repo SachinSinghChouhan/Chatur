@@ -9,6 +9,9 @@ SpeechRecognition==3.10.0  # For Google STT
 vosk==0.3.45  # For offline STT
 
 # Wake Word Detection
+# Primary (free, offline, no API key):
+openwakeword>=0.6.0
+# Fallback (requires PORCUPINE_ACCESS_KEY + .ppn files):
 pvporcupine==2.1.0
 
 # Text-to-Speech
@@ -25,6 +28,7 @@ APScheduler==3.10.4
 # System Tray
 pystray==0.19.5
 Pillow==10.1.0
+plyer>=2.1.0  # Cross-platform OS desktop notifications
 
 # Media Control
 pyautogui==0.9.54

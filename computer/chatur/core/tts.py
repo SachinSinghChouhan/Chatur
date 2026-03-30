@@ -45,7 +45,18 @@ class TextToSpeech:
         
         self.engine.setProperty('rate', config.tts_rate)
         self.engine.setProperty('volume', config.tts_volume)
-    
+
+    def apply_config(self) -> None:
+        """Re-apply rate/volume from config to the live engine (call after settings change)"""
+        if not self.engine:
+            return
+        try:
+            self.engine.setProperty('rate', config.tts_rate)
+            self.engine.setProperty('volume', config.tts_volume)
+            logger.info(f"TTS config reloaded: rate={config.tts_rate}, volume={config.tts_volume}")
+        except Exception as e:
+            logger.error(f"Failed to apply TTS config: {e}")
+
     def _transliterate_hindi(self, text: str) -> str:
         """Convert Devanagari to Roman script for English TTS"""
         transliteration_map: dict = {
@@ -93,12 +104,23 @@ class TextToSpeech:
                 if voices:
                     self.engine.setProperty('voice', voices[0].id)
             
-            self.engine.say(text)
-            self.engine.runAndWait()
-            
+            # Split into sentences so playback starts sooner (streaming feel)
+            sentences = self._split_sentences(text)
+            for sentence in sentences:
+                if sentence.strip():
+                    self.engine.say(sentence)
+                    self.engine.runAndWait()
+
         except Exception as e:
             logger.error(f"TTS error: {e}")
-    
+
+    @staticmethod
+    def _split_sentences(text: str):
+        """Split text into sentences on punctuation boundaries"""
+        import re
+        parts = re.split(r'(?<=[.!?])\s+', text.strip())
+        return [p for p in parts if p.strip()]
+
     def speak_async(self, text: str, language: str = 'en') -> None:
         """Speak text asynchronously (non-blocking)"""
         import threading

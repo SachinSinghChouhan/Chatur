@@ -53,7 +53,15 @@ async def update_config(settings: SettingsUpdate):
             
         # Reload config in memory
         config.load_config()
-        
+
+        # Propagate to live TTS engine if running
+        try:
+            import chatur.main as _main
+            if _main.tts:
+                _main.tts.apply_config()
+        except Exception:
+            pass
+
         return {"status": "updated", "config": current_config}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -234,33 +234,49 @@ def run_assistant_loop(stop_event: threading.Event):
     global tts, stt, processor
     
     logger.info("Assistant loop started")
-    
-    # Check if STT is available
-    use_voice = bool(stt and getattr(stt, 'recognizer', None) is not None)
-    
-    if not use_voice:
+
+    # Detect whether STT has a listen() method (GoogleSTT, WhisperSTT, VoskSTT, Azure)
+    use_voice = bool(stt and callable(getattr(stt, 'listen', None) or getattr(stt, 'recognize_once', None)))
+
+    if use_voice:
+        print("\nVoice mode active. Press Enter to start listening, or type a command and press Enter.")
+    else:
         logger.warning("STT not available - text mode only")
-    
+        print("\nText mode. Type your commands and press Enter.")
+
     # Main loop
     while not stop_event.is_set():
         try:
-            # Text input mode (for now, until voice is fully working)
             broadcast_callback('listening')
-            command = input("You: ").strip()
-            
+
+            # In voice mode, pressing Enter triggers a single STT capture;
+            # typing something and pressing Enter falls back to text.
+            raw = input("You (Enter=voice): " if use_voice else "You: ").strip()
+
+            if use_voice and raw == '':
+                # User pressed Enter without typing — use STT
+                print("Listening...")
+                listen_fn = getattr(stt, 'listen', None) or getattr(stt, 'recognize_once', None)
+                command = listen_fn() if listen_fn else None
+                if not command:
+                    print("(nothing heard)\n")
+                    continue
+                print(f"Heard: {command}")
+            else:
+                command = raw
+
             if not command:
                 continue
-            
+
             if command.lower() in ['quit', 'exit', 'bye']:
                 logger.info("User requested exit")
                 tts.speak("Goodbye!", 'en')
                 stop_event.set()
                 break
-            
-            # Process command
+
             response = processor.process_command(command)
             print(f"Computer: {response}\n")
-            
+
         except KeyboardInterrupt:
             logger.info("Keyboard interrupt received")
             stop_event.set()

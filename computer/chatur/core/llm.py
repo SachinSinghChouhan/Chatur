@@ -93,16 +93,38 @@ Analyze this command and return ONLY the JSON:
 Now analyze: {user_command}"""
 
 class LLMClient:
-    """OpenAI API client for intent classification and Q&A"""
-    
+    """LLM client supporting OpenAI and Ollama (local, no API key needed)."""
+
     def __init__(self):
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            logger.warning("OPENAI_API_KEY not set - LLM features will be limited")
-            self.client = None
+        llm_provider = config.get('llm.provider', 'openai').lower()
+
+        if llm_provider == 'ollama':
+            ollama_base = config.get('llm.ollama_base_url', 'http://localhost:11434/v1')
+            self.ollama_model = config.get('llm.ollama_model', 'llama3')
+            try:
+                # OpenAI SDK supports Ollama's OpenAI-compatible endpoint
+                self.client = OpenAI(base_url=ollama_base, api_key='ollama')
+                logger.info(f"LLM client initialised with Ollama at {ollama_base} (model: {self.ollama_model})")
+            except Exception as e:
+                logger.warning(f"Ollama init failed: {e} — falling back to disabled")
+                self.client = None
+            self._provider = 'ollama'
         else:
-            self.client = OpenAI(api_key=api_key)
-            logger.info("LLM client initialized")
+            api_key = os.getenv('OPENAI_API_KEY')
+            if not api_key:
+                logger.warning("OPENAI_API_KEY not set — LLM features will be limited")
+                self.client = None
+            else:
+                self.client = OpenAI(api_key=api_key)
+                logger.info("LLM client initialised with OpenAI")
+            self._provider = 'openai'
+            self.ollama_model = None
+
+    def _model(self) -> str:
+        """Return the active model name."""
+        if self._provider == 'ollama':
+            return self.ollama_model or 'llama3'
+        return config.openai_model
     
     def classify_intent(self, text: str) -> Intent:
         """Classify user intent from text using rule-based approach"""
@@ -409,15 +431,71 @@ class LLMClient:
                 response_language=response_language
             )
 
-        # Question intent (everything else)
+        # Nothing matched — try LLM classification before defaulting to Q&A
         else:
+            llm_intent = self._llm_classify(text, language, response_language)
+            if llm_intent:
+                return llm_intent
             return Intent(
                 type=IntentType.QUESTION,
                 language=language,
                 parameters={'question': text},
                 response_language=response_language
             )
-    
+
+    def _llm_classify(self, text: str, language: str, response_language: str) -> Optional[Intent]:
+        """Use OpenAI to classify intent when rule-based matching fails."""
+        if not self.client:
+            return None
+        try:
+            prompt = INTENT_CLASSIFIER_PROMPT.replace('{user_command}', text)
+            response = self.client.chat.completions.create(
+                model=self._model(),
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0,
+                max_tokens=100,
+            )
+            raw = response.choices[0].message.content.strip()
+            # Strip markdown code fences if present
+            if raw.startswith("```"):
+                raw = re.sub(r"```[a-z]*\n?", "", raw).replace("```", "").strip()
+            import json
+            data = json.loads(raw)
+            intent_str = data.get("intent", "unknown").lower()
+            params = data.get("parameters", {})
+            lang = data.get("language", language)
+            resp_lang = data.get("response_language", response_language)
+
+            type_map = {
+                "reminder": IntentType.REMINDER,
+                "timer": IntentType.TIMER,
+                "note": IntentType.NOTE,
+                "question": IntentType.QUESTION,
+                "app_launch": IntentType.APP_LAUNCH,
+                "media_control": IntentType.MEDIA_CONTROL,
+                "file_search": IntentType.FILE_SEARCH,
+                "weather": IntentType.WEATHER,
+                "system_info": IntentType.SYSTEM_INFO,
+                "sys_info": IntentType.SYSTEM_INFO,
+                "math": IntentType.MATH,
+                "calendar": IntentType.CALENDAR,
+                "email": IntentType.EMAIL,
+                "task": IntentType.TASK,
+                "unknown": IntentType.UNKNOWN,
+            }
+            intent_type = type_map.get(intent_str, IntentType.QUESTION)
+
+            # For QUESTION fallback, enrich params with original text
+            if intent_type == IntentType.QUESTION and 'question' not in params:
+                params['question'] = text
+
+            logger.info(f"LLM fallback classified '{text[:40]}' as {intent_type.value}")
+            return Intent(type=intent_type, language=lang, parameters=params, response_language=resp_lang)
+
+        except Exception as e:
+            logger.debug(f"LLM fallback classification failed: {e}")
+            return None
+
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     def answer_question(self, question: str, language: str = 'en', conversation_history: Optional[List[Dict[str, str]]] = None) -> str:
         """
@@ -432,7 +510,7 @@ class LLMClient:
             Answer string
         """
         if not self.client:
-            return "I need an OpenAI API key to answer questions. Please add OPENAI_API_KEY to your .env file."
+            return "I need an LLM configured to answer questions. Set OPENAI_API_KEY or configure Ollama in config.yaml."
         
         try:
             system_prompt = (
@@ -454,7 +532,7 @@ class LLMClient:
             messages.append({"role": "user", "content": question})
             
             response = self.client.chat.completions.create(
-                model=config.openai_model,
+                model=self._model(),
                 messages=messages,
                 temperature=0.7,
                 max_tokens=config.openai_max_tokens

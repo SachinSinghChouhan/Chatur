@@ -82,26 +82,32 @@ class ReminderScheduler:
             text = reminder['text']
             language = reminder.get('language', 'en')
             
+            # OS desktop notification (plyer - cross-platform, no API key)
+            try:
+                from plyer import notification as plyer_notification
+                plyer_notification.notify(
+                    title="Chatur Reminder",
+                    message=text,
+                    app_name="Chatur",
+                    timeout=10,
+                )
+            except Exception as notif_err:
+                logger.debug(f"OS notification unavailable: {notif_err}")
+
             # Speak reminder
             if self.tts_engine:
-                if language == 'hi':
-                    message = f"रिमाइंडर: {text}"
-                else:
-                    message = f"Reminder: {text}"
-                
-                # Speak in a separate thread to avoid blocking
+                message = f"Reminder: {text}" if language != 'hi' else f"रिमाइंडर: {text}"
                 threading.Thread(
                     target=self.tts_engine.speak,
                     args=(message, language),
                     daemon=True
                 ).start()
-            
-            # Show notification
+
+            # Custom callback (if provided)
             if self.notification_callback:
                 self.notification_callback("Reminder", text)
-            
-            # Console notification
-            print(f"\n🔔 REMINDER: {text}\n")
+
+            print(f"\n[REMINDER]: {text}\n")
             
         except Exception as e:
             logger.error(f"Error triggering reminder: {e}", exc_info=True)

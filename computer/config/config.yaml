@@ -20,10 +20,13 @@ browser:
 
 # Wake Word Detection
 wake_word:
-  enabled: false  # Set to true to enable wake word detection (requires PORCUPINE_ACCESS_KEY)
-  sensitivity: 0.5
+  enabled: false        # Set to true to enable wake word detection
+  engine: "openwakeword"  # "openwakeword" (free, no key) or "porcupine" (needs PORCUPINE_ACCESS_KEY)
+  model: "hey_jarvis"   # openWakeWord pre-trained model (hey_jarvis, alexa, hey_mycroft, ...)
+  threshold: 0.5        # Detection confidence threshold (0.0–1.0)
+  # Porcupine-only settings:
   keyword: "computer"
-  # keyword_path is resolved dynamically by wake_word.py for the current platform
+  sensitivity: 0.5
 
 # Azure Speech Services
 azure:
@@ -33,7 +36,15 @@ azure:
   stt_timeout_ms: 8000  # Initial silence timeout
   stt_end_silence_ms: 2000  # End silence timeout
 
-# OpenAI Configuration
+# LLM Provider
+# Set provider to "ollama" for fully local/offline operation (no API key needed).
+# Requires Ollama running locally: https://ollama.com
+llm:
+  provider: "openai"       # "openai" or "ollama"
+  ollama_base_url: "http://localhost:11434/v1"
+  ollama_model: "llama3"   # Any model you have pulled: llama3, mistral, gemma2, etc.
+
+# OpenAI Configuration (used when llm.provider == "openai")
 openai:
   model: "gpt-3.5-turbo"
   max_tokens: 150
