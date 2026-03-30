@@ -330,6 +330,85 @@ class LLMClient:
                 response_language=response_language
             )
 
+        # Weather intent
+        elif any(word in text_lower for word in ['weather', 'temperature', 'forecast', 'rain', 'snow', 'sunny', 'humid', 'mausam', 'barish', 'thand', 'garmi', 'aaj ka mausam']):
+            query_type = 'forecast' if any(w in text_lower for w in ['forecast', 'tomorrow', 'week', 'kal']) else 'current'
+            city = None
+            for prep in ['in ', 'at ', 'for ']:
+                if prep in text_lower:
+                    city = text_lower.split(prep)[-1].strip().split()[0]
+                    break
+            params = {'query_type': query_type}
+            if city:
+                params['city'] = city
+            return Intent(
+                type=IntentType.WEATHER,
+                language=language,
+                parameters=params,
+                response_language=response_language
+            )
+
+        # System info intent
+        elif any(word in text_lower for word in ['battery', 'cpu', 'processor', 'memory', 'ram', 'disk', 'storage', 'network', 'wifi', 'ip address', 'system info', 'computer status', 'baattery', 'charge']):
+            query_type = 'all'
+            if 'battery' in text_lower or 'charge' in text_lower:
+                query_type = 'battery'
+            elif 'cpu' in text_lower or 'processor' in text_lower:
+                query_type = 'cpu'
+            elif 'memory' in text_lower or 'ram' in text_lower:
+                query_type = 'memory'
+            elif 'disk' in text_lower or 'storage' in text_lower:
+                query_type = 'disk'
+            elif 'network' in text_lower or 'wifi' in text_lower or 'ip' in text_lower:
+                query_type = 'network'
+            return Intent(
+                type=IntentType.SYSTEM_INFO,
+                language=language,
+                parameters={'query_type': query_type},
+                response_language=response_language
+            )
+
+        # Math intent
+        elif any(word in text_lower for word in ['calculate', 'compute', 'convert', 'how much is', 'what is', 'plus', 'minus', 'times', 'divided', 'percent', 'square root', 'power']) or re.search(r'\d+\s*[\+\-\*\/\^]\s*\d+', text_lower):
+            operation = 'calculate'
+            if 'convert' in text_lower:
+                operation = 'convert'
+            return Intent(
+                type=IntentType.MATH,
+                language=language,
+                parameters={'operation': operation, 'query': text},
+                response_language=response_language
+            )
+
+        # File search intent
+        elif any(word in text_lower for word in ['find file', 'search file', 'locate file', 'where is', 'dhundho', 'file dhund', 'open file']):
+            query = text_lower
+            for prefix in ['find file', 'search file', 'locate file', 'where is', 'find', 'search', 'locate', 'dhundho', 'open file']:
+                query = query.replace(prefix, '').strip()
+            return Intent(
+                type=IntentType.FILE_SEARCH,
+                language=language,
+                parameters={'query': query or text},
+                response_language=response_language
+            )
+
+        # Calendar intent
+        elif any(word in text_lower for word in ['calendar', 'schedule', 'event', 'meeting', 'appointment', 'agenda', 'calender', 'what do i have']):
+            action = 'list'
+            if any(w in text_lower for w in ['add', 'create', 'new', 'set', 'book', 'schedule a']):
+                action = 'create'
+            elif any(w in text_lower for w in ['delete', 'remove', 'cancel']):
+                action = 'delete'
+            params: Dict[str, Any] = {'action': action}
+            if action == 'create':
+                params['summary'] = text
+            return Intent(
+                type=IntentType.CALENDAR,
+                language=language,
+                parameters=params,
+                response_language=response_language
+            )
+
         # Question intent (everything else)
         else:
             return Intent(

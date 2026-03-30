@@ -21,7 +21,7 @@ async def get_config():
     # We return the loaded config object or re-read the file
     # For accuracy, let's read the file as the source of truth
     try:
-        config_path = Path("config/config.yaml")
+        config_path = Path(__file__).parent.parent.parent.parent / 'config' / 'config.yaml'
         if config_path.exists():
             with open(config_path, 'r', encoding='utf-8') as f:
                 return yaml.safe_load(f)
@@ -33,7 +33,7 @@ async def get_config():
 async def update_config(settings: SettingsUpdate):
     """Update configuration"""
     try:
-        config_path = Path("config/config.yaml")
+        config_path = Path(__file__).parent.parent.parent.parent / 'config' / 'config.yaml'
         if not config_path.exists():
              raise HTTPException(status_code=404, detail="Config file not found")
              

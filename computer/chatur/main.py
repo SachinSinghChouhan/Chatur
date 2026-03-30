@@ -11,7 +11,7 @@ load_dotenv()
 from chatur.utils.logger import setup_logger
 from chatur.storage.init_db import init_database
 from chatur.core.tts import TextToSpeech
-from chatur.core.stt import SpeechToText
+from chatur.core.stt_factory import STTFactory
 from chatur.core.llm import LLMClient
 from chatur.core.wake_word import create_wake_word_detector
 from chatur.service.command_processor import CommandProcessor
@@ -55,7 +55,7 @@ def initialize_components(enable_ui: bool = True):
     tts = TextToSpeech()
     
     logger.info("Initializing STT engine...")
-    stt = SpeechToText()
+    stt = STTFactory.create()
     
     logger.info("Initializing LLM client...")
     llm = LLMClient()

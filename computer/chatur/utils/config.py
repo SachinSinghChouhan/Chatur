@@ -37,7 +37,18 @@ class Config:
             self._config = {}
         
         self._initialized = True
-    
+
+    def load_config(self, config_path: str = None):
+        """Reload configuration from disk"""
+        if config_path is None:
+            config_path = Path(__file__).parent.parent.parent / 'config' / 'config.yaml'
+        try:
+            with open(config_path, encoding='utf-8') as f:
+                self._config = yaml.safe_load(f) or {}
+            logger.info(f"Configuration reloaded from {config_path}")
+        except Exception as e:
+            logger.warning(f"Failed to reload config: {e}")
+
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value by dot-notation key"""
         keys = key.split('.')

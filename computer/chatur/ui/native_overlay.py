@@ -50,7 +50,7 @@ class NativeOverlay:
             # Create window (non-blocking)
             self.window = webview.create_window(
                 title='Voice Assistant',
-                url=f'file:///{str(index_file.absolute()).replace(" + "chr(92)" + ", "/")}',
+                url=f'file:///{str(index_file.absolute()).replace(chr(92), "/")}',
                 width=400,
                 height=250,
                 resizable=False,
