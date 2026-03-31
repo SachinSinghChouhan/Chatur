@@ -3,7 +3,10 @@
 import sys
 import time
 from typing import Optional, Any
-import pyautogui
+try:
+    import pyautogui
+except ImportError:
+    pyautogui = None
 from chatur.handlers.base import BaseHandler
 from chatur.models.intent import Intent, IntentType
 from chatur.utils.logger import setup_logger

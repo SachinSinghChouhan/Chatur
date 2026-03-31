@@ -1,9 +1,12 @@
 """Google Tasks Handler"""
 
 from pathlib import Path
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from googleapiclient.discovery import build
+try:
+    from google.oauth2.credentials import Credentials
+    from google.auth.transport.requests import Request
+    from googleapiclient.discovery import build
+except ImportError:
+    Credentials = Request = build = None
 import difflib
 from chatur.utils.platform import get_app_data_dir
 

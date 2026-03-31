@@ -5,7 +5,11 @@ Offline, free, no internet required
 
 import json
 import pyaudio
-from vosk import Model, KaldiRecognizer
+try:
+    from vosk import Model, KaldiRecognizer
+except ImportError:
+    Model = None
+    KaldiRecognizer = None
 from chatur.utils.logger import setup_logger
 from typing import Optional
 from pathlib import Path
