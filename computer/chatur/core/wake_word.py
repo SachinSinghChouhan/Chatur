@@ -2,7 +2,6 @@
 
 import os
 import threading
-import numpy as np
 from typing import Callable, Optional, List, Any
 from pathlib import Path
 
@@ -73,6 +72,7 @@ class OpenWakeWordDetector:
     def _loop(self):
         while self._running:
             try:
+                import numpy as np
                 raw = self._stream.read(1280, exception_on_overflow=False)
                 audio = np.frombuffer(raw, dtype=np.int16)
                 prediction = self._oww.predict(audio)
