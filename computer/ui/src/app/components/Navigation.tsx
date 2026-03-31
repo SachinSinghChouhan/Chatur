@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { Github } from 'lucide-react';
 
 export function Navigation() {
   return (
@@ -45,6 +46,15 @@ export function Navigation() {
             style={{ color: 'var(--text-secondary)' }}
           >
             Demo
+          </a>
+          <a
+            href="https://github.com/SachinSinghChouhan/Chatur"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-opacity hover:opacity-70"
+            aria-label="GitHub"
+          >
+            <Github className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
           </a>
         </div>
       </div>

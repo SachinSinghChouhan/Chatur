@@ -1,4 +1,4 @@
-import { Twitter, Mail, Heart } from 'lucide-react';
+import { Github, Twitter, Mail, Heart } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -17,7 +17,7 @@ export function Footer() {
               About Chatur
             </h4>
             <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-              An open-source personal voice assistant that respects your privacy. Built with care for the Windows user.
+              An open-source personal voice assistant for Windows & Ubuntu that respects your privacy.
             </p>
           </div>
 
@@ -29,7 +29,8 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="#"
+                  href="https://github.com/SachinSinghChouhan/Chatur#readme"
+                  target="_blank" rel="noopener noreferrer"
                   className="text-sm hover:opacity-70 transition-opacity"
                   style={{ color: 'var(--text-secondary)' }}
                 >
@@ -38,7 +39,8 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="https://github.com/SachinSinghChouhan/Chatur/blob/main/CONTRIBUTING.md"
+                  target="_blank" rel="noopener noreferrer"
                   className="text-sm hover:opacity-70 transition-opacity"
                   style={{ color: 'var(--text-secondary)' }}
                 >
@@ -47,7 +49,8 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="https://github.com/SachinSinghChouhan/Chatur/releases"
+                  target="_blank" rel="noopener noreferrer"
                   className="text-sm hover:opacity-70 transition-opacity"
                   style={{ color: 'var(--text-secondary)' }}
                 >
@@ -56,11 +59,12 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="https://github.com/SachinSinghChouhan/Chatur/issues"
+                  target="_blank" rel="noopener noreferrer"
                   className="text-sm hover:opacity-70 transition-opacity"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  Privacy Policy
+                  Report an Issue
                 </a>
               </li>
             </ul>
@@ -72,6 +76,14 @@ export function Footer() {
               Community
             </h4>
             <div className="flex gap-4 mb-4">
+              <a
+                href="https://github.com/SachinSinghChouhan/Chatur"
+                target="_blank" rel="noopener noreferrer"
+                className="hover:opacity-70 transition-opacity"
+                aria-label="GitHub"
+              >
+                <Github className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
+              </a>
               <a
                 href="#"
                 className="hover:opacity-70 transition-opacity"

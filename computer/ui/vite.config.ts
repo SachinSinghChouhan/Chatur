@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { defineConfig } from 'vite'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,7 +8,7 @@ import react from '@vitejs/plugin-react'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  base: './',  // Use relative paths for file:// protocol
+  base: process.env.VERCEL ? '/' : './',  // Vercel needs absolute, desktop app needs relative
   build: {
     rollupOptions: {
       input: {

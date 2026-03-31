@@ -60,24 +60,26 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <VoiceOverlay />
-
-        {/* Settings Floating Button */}
-        {!loading && (
-          <div className="fixed bottom-6 right-6 z-40">
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded-full w-12 h-12 bg-black/50 backdrop-blur-md border-white/10 hover:bg-white/10 text-white shadow-lg"
-              onClick={() => setSettingsOpen(true)}
-            >
-              <Settings className="w-5 h-5" />
-            </Button>
-          </div>
+        {/* Desktop-only components (hidden when deployed as website) */}
+        {import.meta.env.MODE === 'desktop' && (
+          <>
+            <VoiceOverlay />
+            {!loading && (
+              <div className="fixed bottom-6 right-6 z-40">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full w-12 h-12 bg-black/50 backdrop-blur-md border-white/10 hover:bg-white/10 text-white shadow-lg"
+                  onClick={() => setSettingsOpen(true)}
+                >
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </div>
+            )}
+            <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+            <OnboardingWizard open={wizardOpen} onComplete={() => setWizardOpen(false)} />
+          </>
         )}
-
-        <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-        <OnboardingWizard open={wizardOpen} onComplete={() => setWizardOpen(false)} />
       </div>
     </MotionProvider>
   );

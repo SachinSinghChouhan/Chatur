@@ -128,7 +128,7 @@ export function Hero() {
           className="text-xl md:text-2xl mb-12 max-w-2xl mx-auto"
           style={{ color: 'var(--text-secondary)' }}
         >
-          <p>A personal voice assistant for Windows.</p>
+          <p>A personal voice assistant for Windows & Ubuntu.</p>
           <p className="mt-2 text-[var(--accent-primary)]">Speak naturally to control your computer.</p>
         </motion.div>
 

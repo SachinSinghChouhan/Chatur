@@ -19,11 +19,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: computer/ui/package-lock.json
 
-      - name: Build React UI
+      - name: Build React UI (desktop mode)
         working-directory: computer/ui
         run: |
           npm ci
-          npm run build
+          npm run build -- --mode desktop
 
       - name: Upload UI dist
         uses: actions/upload-artifact@v4

@@ -36,32 +36,36 @@ export function DownloadCTA() {
           {/* Requirements */}
           <div className="mb-10">
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              Requirements: Windows 10/11 • 4GB RAM • Microphone
+              Requirements: Windows 10/11 or Ubuntu 20.04+ • 4GB RAM • Microphone
             </p>
           </div>
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <button
+            <a
+              href="https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/ChaturAssistant-windows-x64.exe"
               className="px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-200 hover:bg-[var(--accent-primary)] hover:border-[var(--accent-primary)] group shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] bg-black"
               style={{
                 color: 'var(--text-primary)',
                 border: '1px solid var(--surface-border)',
+                textDecoration: 'none',
               }}
             >
               <Download className="w-5 h-5" />
               Download for Windows
-            </button>
-            <button
+            </a>
+            <a
+              href="https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/ChaturAssistant-linux-x64"
               className="px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-200 hover:bg-[var(--accent-primary)] hover:border-[var(--accent-primary)] group shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] bg-black"
               style={{
                 color: 'var(--text-primary)',
                 border: '1px solid var(--surface-border)',
+                textDecoration: 'none',
               }}
             >
               <Download className="w-5 h-5" />
               Download for Ubuntu
-            </button>
+            </a>
           </div>
 
           {/* Highlights */}
