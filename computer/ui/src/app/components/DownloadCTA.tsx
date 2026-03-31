@@ -14,6 +14,7 @@ export function DownloadCTA() {
 
   return (
     <section
+      id="download"
       ref={ref}
       className="py-32 px-6"
       style={{

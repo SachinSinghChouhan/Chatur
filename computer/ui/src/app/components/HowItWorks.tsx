@@ -21,7 +21,7 @@ const steps = [
   {
     icon: Zap,
     title: 'Action',
-    description: 'Executes command on Windows',
+    description: 'Executes command on your computer',
   },
   {
     icon: MessageCircle,

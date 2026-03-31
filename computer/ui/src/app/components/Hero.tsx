@@ -1,6 +1,56 @@
 import { useEffect, useState } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
 import { Mic } from 'lucide-react';
+
+const EXAMPLE_COMMANDS = [
+  { command: '"Set a timer for 10 minutes"',   response: 'Timer started — 10 minutes.' },
+  { command: '"Open Chrome"',                   response: 'Opening Google Chrome.' },
+  { command: '"What\'s 15% of 340?"',           response: 'That\'s 51.' },
+  { command: '"Remind me to call mom at 6 PM"', response: 'Reminder set for 6 PM.' },
+];
+
+function CyclingCommand() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setIndex(i => (i + 1) % EXAMPLE_COMMANDS.length), 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  const { command, response } = EXAMPLE_COMMANDS[index];
+
+  return (
+    <div
+      className="rounded-xl border p-4 text-left max-w-md mx-auto"
+      style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--surface-border)' }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Mic className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--accent-primary)' }} />
+        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>You say</span>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.3 }}
+        >
+          <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+            {command}
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+              style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
+              च
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{response}</p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const TypewriterText = ({ text, delay = 0 }: { text: string; delay?: number }) => {
   const letters = Array.from(text);
@@ -132,16 +182,46 @@ export function Hero() {
           <p className="mt-2 text-[var(--accent-primary)]">Speak naturally to control your computer.</p>
         </motion.div>
 
-        {/* Version info */}
-        <motion.p
+        {/* Cycling example commands */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 2.0, ease: 'easeOut' }}
+          className="mt-10"
+        >
+          <CyclingCommand />
+        </motion.div>
+
+        {/* Tagline */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 2.2, ease: 'easeOut' }}
-          className="mt-8 text-sm"
+          transition={{ duration: 0.6, delay: 2.5, ease: 'easeOut' }}
+          className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm"
           style={{ color: 'var(--text-muted)' }}
         >
-          Open source • Privacy-first • Local processing
-        </motion.p>
+          <span>Open source</span>
+          <span>•</span>
+          <span>Privacy-first</span>
+          <span>•</span>
+          <span>Works offline</span>
+        </motion.div>
+
+        {/* Download CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 2.8, ease: 'easeOut' }}
+          className="mt-8"
+        >
+          <a
+            href="#download"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all hover:opacity-90"
+            style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
+          >
+            Download Free
+          </a>
+        </motion.div>
       </div>
     </section>
   );

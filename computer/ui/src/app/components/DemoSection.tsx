@@ -2,9 +2,11 @@ import { useRef } from 'react';
 import { motion, useInView } from 'motion/react';
 
 const englishExamples = [
-  { user: 'Hey Computer, what\'s the weather today?', chatur: 'It\'s 24 degrees and sunny in Delhi.' },
-  { user: 'Open my presentation', chatur: 'Opening PowerPoint presentation from Documents.' },
-  { user: 'Set a reminder for 3 PM', chatur: 'Reminder set for 3 PM today.' },
+  { user: 'Open Chrome', chatur: 'Opening Google Chrome.' },
+  { user: 'Set a timer for 10 minutes', chatur: 'Timer started — 10 minutes on the clock.' },
+  { user: "What's 15% of 340?", chatur: 'That\'s 51.' },
+  { user: 'Remind me to call mom at 6 PM', chatur: 'Reminder set for 6 PM today.' },
+  { user: 'Find budget report in Documents', chatur: 'Found budget_report_Q4.xlsx in Documents.' },
 ];
 
 function ChatBubble({ text, isUser }: { text: string; isUser: boolean }) {
