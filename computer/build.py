@@ -109,10 +109,20 @@ if IS_WINDOWS:
 else:
     build_args += [
         '--hidden-import=pyttsx3.drivers.espeak',
-        # Only import GTK backend, not Qt (saves ~150MB)
+        # GTK webview backend
         '--hidden-import=webview',
         '--hidden-import=webview.platforms',
         '--hidden-import=webview.platforms.gtk',
+        # python3-gi (GTK overlay)
+        '--hidden-import=gi',
+        '--hidden-import=gi.repository',
+        '--hidden-import=gi.repository.Gtk',
+        '--hidden-import=gi.repository.GLib',
+        # pynput X11 backend
+        '--hidden-import=Xlib',
+        '--hidden-import=Xlib.display',
+        '--hidden-import=pynput.keyboard._xorg',
+        '--hidden-import=pynput.mouse._xorg',
     ]
 
 PyInstaller.__main__.run(build_args)

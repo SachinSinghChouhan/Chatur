@@ -22,6 +22,10 @@ plyer>=2.1.0
 
 # Hotkeys
 pynput>=1.7.6
+python-xlib>=0.33; sys_platform=="linux"  # pynput X11 backend
+
+# GTK WebView overlay (Linux)
+PyGObject>=3.44.0; sys_platform=="linux"
 
 # Windows volume control
 pycaw; sys_platform=="win32"

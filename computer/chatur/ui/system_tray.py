@@ -142,7 +142,7 @@ class SystemTray:
         if not self.icon:
             return
         try:
-            self._notify(title=title, message=message)
+            self.icon.notify(title=title, message=message)
         except NotImplementedError:
             logger.info(f"Tray notify (unsupported on this backend): {title} — {message}")
         except Exception as e:
