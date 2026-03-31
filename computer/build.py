@@ -91,14 +91,8 @@ build_args = [
     '--exclude-module=google.oauth2',
     '--exclude-module=google_auth_httplib2',
     '--exclude-module=google_auth_oauthlib',
-    # Crypto / SSL bloat (pulled by various deps)
-    '--exclude-module=cryptography',
+    # Crypto (pulled by various deps but not needed at runtime)
     '--exclude-module=nacl',
-    # Email / MIME modules (unused)
-    '--exclude-module=email',
-    '--exclude-module=xml.etree',
-    # Multiprocessing (unused — app is async/threaded)
-    '--exclude-module=multiprocessing',
 ]
 
 # ── Platform-specific ────────────────────────────────────────────────────────
