@@ -53,9 +53,7 @@ function UbuntuCard() {
 
       {/* .deb download */}
       <a
-        href="https://github.com/SachinSinghChouhan/Chatur/releases/latest"
-        target="_blank"
-        rel="noopener noreferrer"
+        href="https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/chatur_amd64.deb"
         className="w-full px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 text-sm font-medium mb-4"
         style={{
           backgroundColor: 'var(--accent-primary)',
@@ -72,8 +70,8 @@ function UbuntuCard() {
         Or install via terminal:
       </p>
       <div className="space-y-1.5">
-        <CommandLine command="wget https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/chatur_1.0.3_amd64.deb" />
-        <CommandLine command="sudo dpkg -i chatur_*_amd64.deb && sudo apt-get install -f" />
+        <CommandLine command="wget https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/chatur_amd64.deb" />
+        <CommandLine command="sudo dpkg -i chatur_amd64.deb && sudo apt-get install -f" />
         <CommandLine command="chatur" />
       </div>
     </div>
