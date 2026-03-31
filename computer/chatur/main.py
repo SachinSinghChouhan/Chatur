@@ -394,8 +394,7 @@ def main_tray():
         shutdown_components()
 
 
-def 
-/main():
+def main():
     """Main entry point - defaults to tray mode for silent background"""
     
     if '--console' in sys.argv:
