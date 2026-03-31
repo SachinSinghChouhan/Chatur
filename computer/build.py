@@ -13,14 +13,6 @@ if not dist_path.exists():
     print("Error: ui/dist not found. Please run 'npm run build' in ui/ directory first.")
     sys.exit(1)
 
-try:
-    import azure.cognitiveservices.speech as speechsdk
-    speech_sdk_dir = Path(speechsdk.__file__).parent
-    print(f"Found Azure Speech SDK at: {speech_sdk_dir}")
-except ImportError:
-    print("Warning: Azure Speech SDK not found. STT may not work in the built executable.")
-    speech_sdk_dir = None
-
 exe_name = 'ChaturAssistant'
 print(f"Starting Build Process (target: {exe_name}{'.exe' if IS_WINDOWS else ''})...")
 
@@ -30,14 +22,17 @@ build_args = [
     '--onefile',
     '--noconsole',
     '--clean',
+    '--strip',  # Strip debug symbols (significant size reduction)
     f'--add-data=ui/dist{os.pathsep}ui/dist',
     f'--add-data=config/config.yaml{os.pathsep}config',
-    # TTS drivers
+
+    # ── Only import what we actually need ────────────────────────────────────
+    # TTS
     '--hidden-import=pyttsx3.drivers',
     # System tray
     '--hidden-import=pystray',
     '--hidden-import=PIL',
-    # Uvicorn / FastAPI
+    # FastAPI / Uvicorn
     '--hidden-import=uvicorn.logging',
     '--hidden-import=uvicorn.loops',
     '--hidden-import=uvicorn.loops.auto',
@@ -46,61 +41,65 @@ build_args = [
     '--hidden-import=uvicorn.protocols.http.auto',
     '--hidden-import=uvicorn.lifespan',
     '--hidden-import=uvicorn.lifespan.on',
-    # WebView
-    '--hidden-import=webview',
-    '--hidden-import=pywebview',
-    '--hidden-import=webview.platforms',
-    # Wake word / audio
-    '--hidden-import=pvporcupine',
-    '--hidden-import=pyaudio',
     # Hotkeys
     '--hidden-import=pynput',
     '--hidden-import=pynput.keyboard',
-    # Google APIs
-    '--hidden-import=google.api_core',
-    '--hidden-import=googleapiclient',
-    '--hidden-import=googleapiclient.discovery',
-    # Exclude heavy unused packages
+    # Audio
+    '--hidden-import=pyaudio',
+    # Core app
+    '--collect-all=chatur',
+
+    # ── Exclude heavy packages ───────────────────────────────────────────────
     '--exclude-module=tensorflow',
     '--exclude-module=torch',
     '--exclude-module=pandas',
     '--exclude-module=matplotlib',
     '--exclude-module=scipy',
     '--exclude-module=IPython',
-    '--collect-all=chatur',
-    '--collect-all=webview',
-    '--collect-all=pvporcupine',
+    '--exclude-module=notebook',
+    '--exclude-module=jupyter',
+    '--exclude-module=pytest',
+    '--exclude-module=setuptools',
+    '--exclude-module=pip',
+    '--exclude-module=wheel',
+    '--exclude-module=distutils',
+    '--exclude-module=tkinter',
+    '--exclude-module=unittest',
+    '--exclude-module=doctest',
+    '--exclude-module=pdb',
+    '--exclude-module=lib2to3',
+    # Azure Speech SDK is ~100MB — exclude from bundle, users install separately
+    '--exclude-module=azure',
+    '--exclude-module=azure.cognitiveservices',
+    '--exclude-module=azure.cognitiveservices.speech',
+    # PyQt is ~150MB on Linux — use system GTK instead
+    '--exclude-module=PyQt6',
+    '--exclude-module=PyQt5',
+    '--exclude-module=qtpy',
+    '--exclude-module=PyQt6.QtWebEngineWidgets',
+    '--exclude-module=PyQt6.QtWebEngineCore',
+    # Don't bundle all pvporcupine platform models
+    '--exclude-module=pvporcupine',
 ]
 
-# ── Platform-specific hidden imports ──────────────────────────────────────────
+# ── Platform-specific ────────────────────────────────────────────────────────
 if IS_WINDOWS:
     build_args += [
-        '--hidden-import=pyttsx3.drivers.sapi5',   # Windows TTS via SAPI
+        '--hidden-import=pyttsx3.drivers.sapi5',
         '--hidden-import=comtypes',
         '--hidden-import=comtypes.stream',
-        '--hidden-import=clr_loader',
-        '--hidden-import=pythonnet',
+        '--hidden-import=webview',
+        '--hidden-import=webview.platforms',
         '--hidden-import=webview.platforms.winforms',
     ]
 else:
-    # Linux: espeak/espeak-ng TTS backend
     build_args += [
         '--hidden-import=pyttsx3.drivers.espeak',
+        # Only import GTK backend, not Qt (saves ~150MB)
+        '--hidden-import=webview',
+        '--hidden-import=webview.platforms',
         '--hidden-import=webview.platforms.gtk',
-        '--hidden-import=webview.platforms.qt',
     ]
-
-# ── Azure Speech SDK shared libraries ─────────────────────────────────────────
-if speech_sdk_dir and speech_sdk_dir.exists():
-    # Include both Windows (.dll) and Linux (.so) shared libraries
-    shared_libs = (
-        list(speech_sdk_dir.glob('*.dll')) +
-        list(speech_sdk_dir.glob('*.so')) +
-        list(speech_sdk_dir.glob('*.so.*'))
-    )
-    for lib in shared_libs:
-        build_args.append(f'--add-binary={lib}{os.pathsep}azure/cognitiveservices/speech')
-        print(f"  Adding shared library: {lib.name}")
 
 PyInstaller.__main__.run(build_args)
 
