@@ -71,11 +71,72 @@ jobs:
         working-directory: computer
         run: python build.py
 
+      - name: Package as .deb
+        run: |
+          # Extract version from tag (e.g. v1.0.0 → 1.0.0), fallback to 1.0.0
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          VERSION="${VERSION:-1.0.0}"
+
+          PKG="chatur_${VERSION}_amd64"
+          mkdir -p "$PKG/DEBIAN"
+          mkdir -p "$PKG/usr/local/bin"
+          mkdir -p "$PKG/usr/share/applications"
+          mkdir -p "$PKG/usr/share/doc/chatur"
+
+          # Binary
+          cp computer/dist/ChaturAssistant "$PKG/usr/local/bin/chatur"
+          chmod +x "$PKG/usr/local/bin/chatur"
+
+          # Control file
+          cat > "$PKG/DEBIAN/control" << EOF
+          Package: chatur
+          Version: $VERSION
+          Architecture: amd64
+          Maintainer: Sachin Singh Chouhan <sachinsinghchouhan@github.com>
+          Depends: libportaudio2, espeak-ng, libgtk-3-0
+          Description: Chatur Voice Assistant
+           A bilingual (English/Hindi) desktop voice assistant.
+           Speak naturally to control your computer — set reminders,
+           search files, open apps, and more. Works offline with
+           local STT and LLM support.
+          EOF
+
+          # Desktop entry (shows in app launcher)
+          cat > "$PKG/usr/share/applications/chatur.desktop" << EOF
+          [Desktop Entry]
+          Name=Chatur Assistant
+          Comment=Bilingual voice assistant for your desktop
+          Exec=/usr/local/bin/chatur
+          Icon=chatur
+          Type=Application
+          Categories=Utility;Accessibility;
+          Keywords=voice;assistant;speech;
+          StartupNotify=true
+          EOF
+
+          # Copyright
+          cat > "$PKG/usr/share/doc/chatur/copyright" << EOF
+          Chatur Voice Assistant
+          Copyright 2026 Sachin Singh Chouhan
+          License: MIT
+          EOF
+
+          # Build .deb
+          dpkg-deb --build --root-owner-group "$PKG"
+          mv "${PKG}.deb" "chatur_${VERSION}_amd64.deb"
+
       - name: Upload Ubuntu binary
         uses: actions/upload-artifact@v4
         with:
           name: ChaturAssistant-Ubuntu
           path: computer/dist/ChaturAssistant
+
+      - name: Upload .deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChaturAssistant-deb
+          path: chatur_*_amd64.deb
 
   # ─── Windows build ────────────────────────────────────────────────────────────
   build-windows:
@@ -123,6 +184,12 @@ jobs:
           name: ChaturAssistant-Ubuntu
           path: artifacts/
 
+      - name: Download .deb package
+        uses: actions/download-artifact@v4
+        with:
+          name: ChaturAssistant-deb
+          path: artifacts/
+
       - name: Download Windows executable
         uses: actions/download-artifact@v4
         with:
@@ -132,7 +199,7 @@ jobs:
       - name: Make Ubuntu binary executable
         run: chmod +x artifacts/ChaturAssistant
 
-      - name: Rename artifacts
+      - name: Rename raw binary
         run: |
           mv artifacts/ChaturAssistant     artifacts/ChaturAssistant-linux-x64
           mv artifacts/ChaturAssistant.exe artifacts/ChaturAssistant-windows-x64.exe
@@ -145,28 +212,31 @@ jobs:
             ## Chatur Voice Assistant ${{ github.ref_name }}
 
             ### Downloads
-            | Platform | File |
-            |----------|------|
-            | Windows 10/11 | `ChaturAssistant-windows-x64.exe` |
-            | Ubuntu 20.04+ | `ChaturAssistant-linux-x64` |
+            | Platform | File | How to install |
+            |----------|------|----------------|
+            | Windows 10/11 | `ChaturAssistant-windows-x64.exe` | Double-click to run |
+            | Ubuntu 20.04+ (recommended) | `chatur_*_amd64.deb` | `sudo dpkg -i chatur_*_amd64.deb` |
+            | Ubuntu 20.04+ (raw binary) | `ChaturAssistant-linux-x64` | `chmod +x` then run |
 
-            ### Setup
-            1. Download the file for your platform
-            2. Create a `.env` file next to the executable:
-               ```
-               OPENAI_API_KEY=your_key_here
-               AZURE_SPEECH_KEY=your_key_here
-               AZURE_SPEECH_REGION=centralindia
-               ```
-            3. Run the executable
+            ### Setup after install
+            Create a `.env` file next to the executable (or at `~/.config/chatur/.env`):
+            ```
+            OPENAI_API_KEY=your_key_here
+            AZURE_SPEECH_KEY=your_key_here
+            AZURE_SPEECH_REGION=centralindia
+            ```
 
-            ### Ubuntu: make it executable first
+            ### Ubuntu .deb install
             ```bash
-            chmod +x ChaturAssistant-linux-x64
-            ./ChaturAssistant-linux-x64
+            sudo dpkg -i chatur_${{ github.ref_name }}_amd64.deb
+            # Install any missing dependencies:
+            sudo apt-get install -f
+            # Run:
+            chatur
             ```
           files: |
             artifacts/ChaturAssistant-linux-x64
             artifacts/ChaturAssistant-windows-x64.exe
+            artifacts/chatur_*_amd64.deb
           draft: false
           prerelease: false
