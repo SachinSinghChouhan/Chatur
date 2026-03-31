@@ -80,6 +80,25 @@ build_args = [
     '--exclude-module=PyQt6.QtWebEngineCore',
     # Don't bundle all pvporcupine platform models
     '--exclude-module=pvporcupine',
+    # openwakeword pulls onnxruntime (~50MB) + numpy
+    '--exclude-module=openwakeword',
+    '--exclude-module=onnxruntime',
+    # Vosk native libs
+    '--exclude-module=vosk',
+    # Google API client (users set up OAuth separately)
+    '--exclude-module=googleapiclient',
+    '--exclude-module=google.auth',
+    '--exclude-module=google.oauth2',
+    '--exclude-module=google_auth_httplib2',
+    '--exclude-module=google_auth_oauthlib',
+    # Crypto / SSL bloat (pulled by various deps)
+    '--exclude-module=cryptography',
+    '--exclude-module=nacl',
+    # Email / MIME modules (unused)
+    '--exclude-module=email',
+    '--exclude-module=xml.etree',
+    # Multiprocessing (unused — app is async/threaded)
+    '--exclude-module=multiprocessing',
 ]
 
 # ── Platform-specific ────────────────────────────────────────────────────────
@@ -91,6 +110,7 @@ if IS_WINDOWS:
         '--hidden-import=webview',
         '--hidden-import=webview.platforms',
         '--hidden-import=webview.platforms.winforms',
+        '--noupx',  # UPX on Windows can trigger false antivirus positives
     ]
 else:
     build_args += [

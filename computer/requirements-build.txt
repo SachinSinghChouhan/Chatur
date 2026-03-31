@@ -1,0 +1,50 @@
+# Minimal dependencies for building the executable.
+# Heavy optional packages (Azure, PyQt6, Vosk, Porcupine, openwakeword)
+# are excluded — users install them separately if needed.
+
+# Speech Recognition (lightweight Google STT only)
+pyaudio==0.2.14
+SpeechRecognition==3.10.0
+
+# Text-to-Speech
+pyttsx3==2.90
+
+# LLM
+openai>=1.12.0
+
+# Scheduling
+APScheduler==3.10.4
+
+# System Tray
+pystray==0.19.5
+Pillow==10.1.0
+plyer>=2.1.0
+
+# Hotkeys
+pynput>=1.7.6
+
+# Windows volume control
+pycaw; sys_platform=="win32"
+comtypes; sys_platform=="win32"
+
+# Configuration
+PyYAML==6.0.1
+python-dotenv==1.0.0
+
+# Utilities
+python-dateutil==2.8.2
+psutil==5.9.8
+requests==2.31.0
+tenacity==8.2.3
+simpleeval==0.9.13
+pint==0.23
+
+# WebView (core only — backends come from system)
+pywebview==6.1
+
+# API server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# Build tool
+pyinstaller>=5.13.2
