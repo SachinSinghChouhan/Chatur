@@ -1,6 +1,84 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useInView } from 'motion/react';
-import { Download, Shield, Code, Layers } from 'lucide-react';
+import { Download, Shield, Code, Layers, Terminal, Copy, Check } from 'lucide-react';
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1 rounded hover:bg-white/10 transition-colors flex-shrink-0"
+      title="Copy to clipboard"
+    >
+      {copied
+        ? <Check className="w-3.5 h-3.5 text-green-400" />
+        : <Copy className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+      }
+    </button>
+  );
+}
+
+function CommandLine({ command }: { command: string }) {
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2 rounded-md font-mono text-xs"
+      style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+    >
+      <Terminal className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
+      <code className="flex-1 overflow-x-auto whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
+        {command}
+      </code>
+      <CopyButton text={command} />
+    </div>
+  );
+}
+
+function UbuntuCard() {
+  return (
+    <div
+      className="rounded-xl border p-6 text-left"
+      style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--surface-border)' }}
+    >
+      <h3 className="font-semibold mb-1 text-lg" style={{ color: 'var(--text-primary)' }}>
+        Ubuntu / Debian
+      </h3>
+      <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+        Ubuntu 20.04+ / Debian 11+ (x64)
+      </p>
+
+      {/* .deb download */}
+      <a
+        href="https://github.com/SachinSinghChouhan/Chatur/releases/latest"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 text-sm font-medium mb-4"
+        style={{
+          backgroundColor: 'var(--accent-primary)',
+          color: 'white',
+          textDecoration: 'none',
+        }}
+      >
+        <Download className="w-4 h-4" />
+        Download .deb
+      </a>
+
+      {/* Terminal install commands */}
+      <p className="text-[11px] mb-2 font-medium" style={{ color: 'var(--text-muted)' }}>
+        Or install via terminal:
+      </p>
+      <div className="space-y-1.5">
+        <CommandLine command="wget https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/chatur_1.0.3_amd64.deb" />
+        <CommandLine command="sudo dpkg -i chatur_*_amd64.deb && sudo apt-get install -f" />
+        <CommandLine command="chatur" />
+      </div>
+    </div>
+  );
+}
 
 const highlights = [
   { icon: Shield, text: 'Privacy-first design' },
@@ -41,32 +119,38 @@ export function DownloadCTA() {
             </p>
           </div>
 
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <a
-              href="https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/ChaturAssistant-windows-x64.exe"
-              className="px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-200 hover:bg-[var(--accent-primary)] hover:border-[var(--accent-primary)] group shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] bg-black"
-              style={{
-                color: 'var(--text-primary)',
-                border: '1px solid var(--surface-border)',
-                textDecoration: 'none',
-              }}
+          {/* Download Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-12">
+            {/* Windows */}
+            <div
+              className="rounded-xl border p-6 text-left"
+              style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--surface-border)' }}
             >
-              <Download className="w-5 h-5" />
-              Download for Windows
-            </a>
-            <a
-              href="https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/ChaturAssistant-linux-x64"
-              className="px-8 py-4 rounded-lg flex items-center gap-2 transition-all duration-200 hover:bg-[var(--accent-primary)] hover:border-[var(--accent-primary)] group shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] bg-black"
-              style={{
-                color: 'var(--text-primary)',
-                border: '1px solid var(--surface-border)',
-                textDecoration: 'none',
-              }}
-            >
-              <Download className="w-5 h-5" />
-              Download for Ubuntu
-            </a>
+              <h3 className="font-semibold mb-1 text-lg" style={{ color: 'var(--text-primary)' }}>
+                Windows
+              </h3>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+                Windows 10/11 (x64)
+              </p>
+              <a
+                href="https://github.com/SachinSinghChouhan/Chatur/releases/latest/download/ChaturAssistant-windows-x64.exe"
+                className="w-full px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 text-sm font-medium"
+                style={{
+                  backgroundColor: 'var(--accent-primary)',
+                  color: 'white',
+                  textDecoration: 'none',
+                }}
+              >
+                <Download className="w-4 h-4" />
+                Download .exe
+              </a>
+              <p className="text-[11px] mt-3" style={{ color: 'var(--text-muted)' }}>
+                Double-click to run — no installation needed
+              </p>
+            </div>
+
+            {/* Ubuntu */}
+            <UbuntuCard />
           </div>
 
           {/* Highlights */}
