@@ -94,7 +94,7 @@ jobs:
           Version: $VERSION
           Architecture: amd64
           Maintainer: Sachin Singh Chouhan <sachinsinghchouhan@github.com>
-          Depends: libportaudio2, espeak-ng, libgtk-3-0
+          Depends: libportaudio2, espeak, espeak-ng, libgtk-3-0
           Description: Chatur Voice Assistant
            A bilingual (English/Hindi) desktop voice assistant.
            Speak naturally to control your computer — set reminders,
