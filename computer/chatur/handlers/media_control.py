@@ -20,7 +20,8 @@ class MediaControlHandler(BaseHandler):
     
     def __init__(self):
         # Set pyautogui to be faster
-        pyautogui.PAUSE = 0.1
+        if pyautogui:
+            pyautogui.PAUSE = 0.1
 
         self.volume: Any = None
         self.has_volume_control = False

@@ -137,6 +137,17 @@ class SystemTray:
             )
         )
     
+    def _notify(self, title: str, message: str):
+        """Safe wrapper around icon.notify — pystray Xorg backend raises NotImplementedError."""
+        if not self.icon:
+            return
+        try:
+            self._notify(title=title, message=message)
+        except NotImplementedError:
+            logger.info(f"Tray notify (unsupported on this backend): {title} — {message}")
+        except Exception as e:
+            logger.warning(f"Tray notify failed: {e}")
+
     def _show_status(self, icon, item):
         """Show current status"""
         if not self.managed_service:
@@ -156,7 +167,7 @@ class SystemTray:
         
         # Show notification
         if self.icon:
-            self.icon.notify(
+            self._notify(
                 title="Voice Assistant Status",
                 message=status
             )
@@ -170,7 +181,7 @@ class SystemTray:
         threading.Timer(0.5, self._update_icon).start()
         
         if self.icon:
-            self.icon.notify(
+            self._notify(
                 title="Voice Assistant",
                 message="Assistant started"
             )
@@ -184,7 +195,7 @@ class SystemTray:
         threading.Timer(0.5, self._update_icon).start()
         
         if self.icon:
-            self.icon.notify(
+            self._notify(
                 title="Voice Assistant",
                 message="Assistant stopped"
             )
@@ -198,7 +209,7 @@ class SystemTray:
         threading.Timer(1.0, self._update_icon).start()
         
         if self.icon:
-            self.icon.notify(
+            self._notify(
                 title="Voice Assistant",
                 message="Assistant restarting..."
             )
@@ -221,7 +232,7 @@ class SystemTray:
         else:
             logger.warning(f"Log file not found: {log_file}")
             if self.icon:
-                self.icon.notify(
+                self._notify(
                     title="Voice Assistant",
                     message=f"Log file not found: {log_file}"
                 )
@@ -229,7 +240,7 @@ class SystemTray:
     def _show_about(self, icon, item):
         """Show about information"""
         if self.icon:
-            self.icon.notify(
+            self._notify(
                 title="Computer Voice Assistant",
                 message="Version 1.0\nBilingual AI Assistant\nEnglish & Hindi Support"
             )
