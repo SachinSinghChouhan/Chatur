@@ -64,7 +64,6 @@ build_args = [
     '--exclude-module=tensorflow',
     '--exclude-module=torch',
     '--exclude-module=pandas',
-    '--exclude-module=numpy',
     '--exclude-module=matplotlib',
     '--exclude-module=scipy',
     '--exclude-module=IPython',
