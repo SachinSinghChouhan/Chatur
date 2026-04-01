@@ -55,7 +55,8 @@ jobs:
             libgirepository1.0-dev \
             libgirepository-2.0-dev \
             gir1.2-ayatanaappindicator3-0.1 \
-            pkg-config
+            pkg-config \
+            ffmpeg
 
       - uses: actions/setup-python@v5
         with:
@@ -225,12 +226,21 @@ jobs:
             | Ubuntu 20.04+ (raw binary) | `ChaturAssistant-linux-x64` | `chmod +x` then run |
 
             ### Setup after install
-            Create a `.env` file next to the executable (or at `~/.config/chatur/.env`):
+            Chatur runs **fully offline** — no API keys required.
+
+            **One-time setup (LLM for Q&A):**
+            ```bash
+            # Install Ollama
+            curl -fsSL https://ollama.com/install.sh | sh
+            # Pull a local model (~4 GB)
+            ollama pull mistral
+            # Ollama starts automatically as a service
             ```
-            OPENAI_API_KEY=your_key_here
-            AZURE_SPEECH_KEY=your_key_here
-            AZURE_SPEECH_REGION=centralindia
-            ```
+
+            The speech recognition model (~300 MB) downloads automatically on first launch.
+
+            > **Optional:** For cloud LLM/STT, set `OPENAI_API_KEY` or `AZURE_SPEECH_KEY`
+            > in `~/.config/chatur/.env` and update `config.yaml`.
 
             ### Ubuntu .deb install
             ```bash

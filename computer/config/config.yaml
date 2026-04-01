@@ -2,12 +2,19 @@
 
 # Speech-to-Text Engine Selection
 stt:
-  engine: "google"  # Options: azure, whisper, google, vosk
+  engine: "local_whisper"  # Options: local_whisper, vosk, google, whisper (cloud), azure
   # Azure settings
   azure_region: "centralindia"
   azure_timeout_ms: 8000
   # Vosk settings
   vosk_model_path: "vosk-model"  # Path to Vosk model directory
+
+# Local Whisper STT (faster-whisper, runs fully on-device)
+# Model is downloaded automatically on first run to ~/.cache/huggingface/hub/
+whisper:
+  model: "base"          # tiny (~150MB) | base (~300MB) | small (~500MB) | medium (~1.5GB)
+  device: "cpu"          # cpu | cuda  (set cuda if you have an NVIDIA GPU)
+  compute_type: "int8"   # int8 (fastest on CPU) | float16 (GPU) | float32
 
 # Default Browser
 browser:
@@ -40,9 +47,9 @@ azure:
 # Set provider to "ollama" for fully local/offline operation (no API key needed).
 # Requires Ollama running locally: https://ollama.com
 llm:
-  provider: "openai"       # "openai" or "ollama"
+  provider: "ollama"       # "ollama" (local, no API key) or "openai"
   ollama_base_url: "http://localhost:11434/v1"
-  ollama_model: "llama3"   # Any model you have pulled: llama3, mistral, gemma2, etc.
+  ollama_model: "mistral"  # Any model you have pulled: mistral, llama3, gemma2, etc.
 
 # OpenAI Configuration (used when llm.provider == "openai")
 openai:

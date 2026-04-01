@@ -2,9 +2,12 @@
 # Heavy optional packages (Azure, PyQt6, Vosk, Porcupine, openwakeword)
 # are excluded — users install them separately if needed.
 
-# Speech Recognition (lightweight Google STT only)
+# Speech Recognition
 pyaudio==0.2.14
 SpeechRecognition==3.10.0
+
+# Local (offline) STT — faster-whisper runs Whisper on-device, no API key needed
+faster-whisper>=1.0.0
 
 # Text-to-Speech
 pyttsx3==2.90

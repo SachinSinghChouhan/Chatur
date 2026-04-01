@@ -41,6 +41,7 @@ from chatur.service.command_processor import CommandProcessor
 from chatur.service.scheduler import ReminderScheduler
 from chatur.core.assistant_state import AssistantStateMachine, AssistantState
 from chatur.utils.config import config
+from chatur.setup.first_run import run_if_needed
 
 logger = setup_logger('chatur')
 
@@ -70,7 +71,9 @@ def initialize_components(enable_ui: bool = True):
     logger.info("=" * 60)
     logger.info("Computer Voice Assistant - Initializing")
     logger.info("=" * 60)
-    
+
+    run_if_needed()
+
     logger.info("Initializing database...")
     init_database()
     

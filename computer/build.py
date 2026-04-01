@@ -46,6 +46,11 @@ build_args = [
     '--hidden-import=pynput.keyboard',
     # Audio
     '--hidden-import=pyaudio',
+    # Local Whisper STT (faster-whisper)
+    '--hidden-import=faster_whisper',
+    '--collect-all=faster_whisper',
+    '--hidden-import=ctranslate2',
+    '--collect-all=ctranslate2',
     # Core app
     '--collect-all=chatur',
 

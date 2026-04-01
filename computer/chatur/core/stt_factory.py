@@ -44,7 +44,11 @@ class STTFactory:
             elif engine_name == 'whisper':
                 from chatur.core.whisper_stt import WhisperSTT
                 return WhisperSTT()
-            
+
+            elif engine_name == 'local_whisper':
+                from chatur.core.local_whisper_stt import LocalWhisperSTT
+                return LocalWhisperSTT()
+
             elif engine_name == 'vosk':
                 from chatur.core.vosk_stt import VoskSTT
                 return VoskSTT()
@@ -88,10 +92,17 @@ class STTFactory:
         except ImportError:
             pass
         
-        # Check Whisper
+        # Check Whisper (cloud)
         try:
             import openai
             available.append('whisper')
+        except ImportError:
+            pass
+
+        # Check local Whisper (faster-whisper)
+        try:
+            import faster_whisper  # noqa: F401
+            available.append('local_whisper')
         except ImportError:
             pass
         
@@ -138,6 +149,14 @@ class STTFactory:
                 'cost': 'Paid',
                 'accuracy': 'Very High',
                 'languages': ['en', 'multilingual'],
+            },
+            'local_whisper': {
+                'name': 'Local Whisper (faster-whisper)',
+                'requires_internet': False,
+                'requires_api_key': False,
+                'cost': 'Free',
+                'accuracy': 'High',
+                'languages': ['multilingual'],
             },
             'vosk': {
                 'name': 'Vosk Offline STT',
