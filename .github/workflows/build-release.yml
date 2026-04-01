@@ -53,6 +53,7 @@ jobs:
             libcairo2-dev \
             libglib2.0-dev \
             libgirepository1.0-dev \
+            libgirepository-2.0-dev \
             pkg-config
 
       - uses: actions/setup-python@v5
