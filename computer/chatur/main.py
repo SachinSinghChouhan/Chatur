@@ -11,8 +11,15 @@ load_dotenv()
 
 # Prevent WebKit2GTK GPU process from segfaulting in bundled/sandboxed environments
 if sys.platform.startswith('linux'):
-    os.environ.setdefault('WEBKIT_FORCE_SANDBOX', '0')
+    os.environ.setdefault('WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS', '1')
     os.environ.setdefault('WEBKIT_DISABLE_COMPOSITING_MODE', '1')
+    # PyGObject >= 3.50 moved idle_add from GObject to GLib; patch for pystray 0.19.5
+    try:
+        from gi.repository import GObject, GLib
+        if not hasattr(GObject, 'idle_add'):
+            GObject.idle_add = GLib.idle_add
+    except Exception:
+        pass
 
 from chatur.utils.logger import setup_logger
 from chatur.storage.init_db import init_database
