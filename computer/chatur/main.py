@@ -1,5 +1,6 @@
 """Voice-enabled main application with console and system tray modes"""
 
+import os
 import sys
 import threading
 from pathlib import Path
@@ -7,6 +8,11 @@ from typing import Callable, Optional
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Prevent WebKit2GTK GPU process from segfaulting in bundled/sandboxed environments
+if sys.platform.startswith('linux'):
+    os.environ.setdefault('WEBKIT_FORCE_SANDBOX', '0')
+    os.environ.setdefault('WEBKIT_DISABLE_COMPOSITING_MODE', '1')
 
 from chatur.utils.logger import setup_logger
 from chatur.storage.init_db import init_database
