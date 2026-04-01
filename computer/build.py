@@ -113,11 +113,13 @@ else:
         '--hidden-import=webview',
         '--hidden-import=webview.platforms',
         '--hidden-import=webview.platforms.gtk',
-        # python3-gi (GTK overlay)
+        # python3-gi (GTK overlay) + overrides (needed for pythonic GLib.idle_add API)
         '--hidden-import=gi',
         '--hidden-import=gi.repository',
         '--hidden-import=gi.repository.Gtk',
         '--hidden-import=gi.repository.GLib',
+        '--hidden-import=gi.repository.GObject',
+        '--collect-submodules=gi.overrides',
         # pynput X11 backend
         '--hidden-import=Xlib',
         '--hidden-import=Xlib.display',

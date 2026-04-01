@@ -13,11 +13,21 @@ load_dotenv()
 if sys.platform.startswith('linux'):
     os.environ.setdefault('WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS', '1')
     os.environ.setdefault('WEBKIT_DISABLE_COMPOSITING_MODE', '1')
-    # PyGObject >= 3.50 moved idle_add from GObject to GLib; patch for pystray 0.19.5
+    # PyGObject >= 3.52 removed GObject.idle_add; without gi.overrides bundled,
+    # GLib.idle_add falls back to raw C API requiring (priority, callback) not (callback).
+    # Patch to accept the old callback-first calling convention used by pystray 0.19.5.
     try:
         from gi.repository import GObject, GLib
-        if not hasattr(GObject, 'idle_add'):
-            GObject.idle_add = GLib.idle_add
+        _orig_idle_add = GLib.idle_add
+        def _compat_idle_add(callback_or_priority, *args, **kwargs):
+            if callable(callback_or_priority):
+                try:
+                    return _orig_idle_add(callback_or_priority, *args, **kwargs)
+                except TypeError:
+                    return _orig_idle_add(GLib.PRIORITY_DEFAULT_IDLE, callback_or_priority, *args, **kwargs)
+            return _orig_idle_add(callback_or_priority, *args, **kwargs)
+        GLib.idle_add = _compat_idle_add
+        GObject.idle_add = _compat_idle_add
     except Exception:
         pass
 
