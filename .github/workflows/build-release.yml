@@ -54,6 +54,7 @@ jobs:
             libglib2.0-dev \
             libgirepository1.0-dev \
             libgirepository-2.0-dev \
+            gir1.2-ayatana-appindicator3-0.1 \
             pkg-config
 
       - uses: actions/setup-python@v5
@@ -99,7 +100,7 @@ jobs:
           Version: $VERSION
           Architecture: amd64
           Maintainer: Sachin Singh Chouhan <sachinsinghchouhan@github.com>
-          Depends: libportaudio2, espeak, espeak-ng, libgtk-3-0, python3-gi, python3-xlib
+          Depends: libportaudio2, espeak, espeak-ng, libgtk-3-0, python3-gi, python3-xlib, gir1.2-ayatana-appindicator3-0.1
           Description: Chatur Voice Assistant
            A bilingual (English/Hindi) desktop voice assistant.
            Speak naturally to control your computer — set reminders,
